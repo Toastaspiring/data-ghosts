@@ -8,33 +8,44 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 50 29% 98%;
+    --foreground: 263 30% 25%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 263 30% 25%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 263 30% 25%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 263 83% 78%;
+    --primary-foreground: 263 30% 25%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 203 100% 85%;
+    --secondary-foreground: 263 30% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 329 100% 95%;
+    --muted-foreground: 263 20% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 329 100% 87%;
+    --accent-foreground: 263 30% 25%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 263 30% 90%;
+    --input: 263 30% 95%;
+    --ring: 263 83% 78%;
+    
+    --yellow-pastel: 48 100% 84%;
+    --gradient-pastel: linear-gradient(135deg, hsl(263, 83%, 78%), hsl(203, 100%, 85%));
+    --gradient-hero: linear-gradient(135deg, hsl(329, 100%, 87%), hsl(263, 83%, 78%));
+    
+    --shadow-soft: 0 4px 20px hsl(263 83% 78% / 0.15);
+    --shadow-card: 0 8px 30px hsl(263 83% 78% / 0.2);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --radius: 1.5rem;
 
     --radius: 0.5rem;
 
@@ -56,33 +67,36 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 263 35% 12%;
+    --foreground: 263 10% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 263 30% 15%;
+    --card-foreground: 263 10% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 263 30% 15%;
+    --popover-foreground: 263 10% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 263 83% 78%;
+    --primary-foreground: 263 30% 15%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 203 80% 50%;
+    --secondary-foreground: 263 10% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 263 20% 25%;
+    --muted-foreground: 263 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 329 80% 60%;
+    --accent-foreground: 263 10% 95%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 263 10% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 263 30% 25%;
+    --input: 263 30% 22%;
+    --ring: 263 83% 78%;
+    
+    --shadow-soft: 0 4px 20px hsl(263 83% 50% / 0.3);
+    --shadow-card: 0 8px 30px hsl(263 83% 50% / 0.4);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +115,46 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  
+  .cartoon-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .pastel-gradient {
+    background: var(--gradient-pastel);
+  }
+  
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+  
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
   }
 }
