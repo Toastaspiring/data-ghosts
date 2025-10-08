@@ -52,6 +52,8 @@ export type Database = {
           id: string
           last_hint_time: string | null
           name: string
+          parallel_mode: boolean | null
+          player_assignments: Json | null
           players: Json
           solution: string
           status: string
@@ -67,6 +69,8 @@ export type Database = {
           id?: string
           last_hint_time?: string | null
           name: string
+          parallel_mode?: boolean | null
+          player_assignments?: Json | null
           players?: Json
           solution: string
           status?: string
@@ -82,6 +86,8 @@ export type Database = {
           id?: string
           last_hint_time?: string | null
           name?: string
+          parallel_mode?: boolean | null
+          player_assignments?: Json | null
           players?: Json
           solution?: string
           status?: string
@@ -140,31 +146,40 @@ export type Database = {
           code_reward: string | null
           created_at: string
           description: string
+          destination_name: string | null
+          environmental_context: Json | null
           id: string
           order_index: number
           room_number: number
           theme: string
           title: string
+          token_name: string | null
         }
         Insert: {
           code_reward?: string | null
           created_at?: string
           description: string
+          destination_name?: string | null
+          environmental_context?: Json | null
           id?: string
           order_index: number
           room_number: number
           theme: string
           title: string
+          token_name?: string | null
         }
         Update: {
           code_reward?: string | null
           created_at?: string
           description?: string
+          destination_name?: string | null
+          environmental_context?: Json | null
           id?: string
           order_index?: number
           room_number?: number
           theme?: string
           title?: string
+          token_name?: string | null
         }
         Relationships: []
       }

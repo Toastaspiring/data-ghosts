@@ -14,6 +14,9 @@ import { VideoTimecodePuzzle } from "@/components/puzzles/VideoTimecodePuzzle";
 import { FinalButtonPuzzle } from "@/components/puzzles/FinalButtonPuzzle";
 import { ActionPuzzle } from "@/components/puzzles/ActionPuzzle";
 import { SevenDifferencesPuzzle } from "@/components/puzzles/SevenDifferencesPuzzle";
+import { AlgorithmPuzzle } from "@/components/puzzles/AlgorithmPuzzle";
+import { BiodiversityQuizPuzzle } from "@/components/puzzles/BiodiversityQuizPuzzle";
+import { PlayerDashboard } from "@/components/PlayerDashboard";
 
 interface Room {
   id: string;
@@ -54,6 +57,8 @@ interface Lobby {
   status: string;
   hints_used: number;
   last_hint_time: string | null;
+  parallel_mode?: boolean;
+  player_assignments?: Record<string, number>;
 }
 
 const Game = () => {
@@ -327,8 +332,23 @@ const Game = () => {
     );
   }
 
-  const currentRoom = rooms.find((r) => r.room_number === lobby.current_room);
+  // Phase 3: Check if player is in parallel mode and get assigned room
+  const assignedRoom = lobby?.parallel_mode && lobby.player_assignments 
+    ? lobby.player_assignments[playerId] 
+    : null;
+
+  // Phase 3: In parallel mode, show only assigned room
+  const displayRoom = assignedRoom || lobby.current_room;
+  const currentRoom = rooms.find((r) => r.room_number === displayRoom);
   const currentPuzzle = currentRoomPuzzles[currentPuzzleIndex];
+
+  // Phase 3: Add assigned room to players for display
+  const playersWithRooms = lobby.players.map(player => ({
+    ...player,
+    assignedRoom: lobby.parallel_mode && lobby.player_assignments 
+      ? lobby.player_assignments[player.id] 
+      : undefined
+  }));
 
   // Render puzzle based on type
   const renderPuzzle = () => {
@@ -386,6 +406,23 @@ const Game = () => {
           <FinalButtonPuzzle
             clicksRequired={puzzleData.clicks_required}
             countdownDuration={puzzleData.countdown_duration}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "algorithm":
+        return (
+          <AlgorithmPuzzle
+            algorithm={puzzleData.algorithm}
+            correctSequence={puzzleData.correct_sequence}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "biodiversity-quiz":
+        return (
+          <BiodiversityQuizPuzzle
+            questions={puzzleData.questions}
             onSolve={handlePuzzleSolved}
           />
         );
@@ -473,6 +510,13 @@ const Game = () => {
         {/* Room Info */}
         {currentRoom && (
           <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
+            {lobby.parallel_mode && assignedRoom && (
+              <div className="mb-4 bg-primary/10 border-2 border-primary rounded-xl p-3">
+                <p className="text-sm font-semibold text-primary">
+                  🎯 Votre mission: Salle {assignedRoom}
+                </p>
+              </div>
+            )}
             <h2 className="text-2xl font-bold text-foreground mb-2">{currentRoom.title}</h2>
             <p className="text-muted-foreground">{currentRoom.description}</p>
             <div className="mt-4 flex gap-2">
@@ -483,17 +527,21 @@ const Game = () => {
           </div>
         )}
 
-        {/* Players Scores */}
-        <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
-          <div className="flex justify-around">
-            {lobby.players.map((player) => (
-              <div key={player.id} className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">{player.name}</p>
-                <p className="text-2xl font-bold text-primary">{player.score}</p>
-              </div>
-            ))}
+        {/* Phase 3: Player Dashboard */}
+        {lobby.parallel_mode ? (
+          <PlayerDashboard players={playersWithRooms} currentPlayerId={playerId} />
+        ) : (
+          <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
+            <div className="flex justify-around">
+              {lobby.players.map((player) => (
+                <div key={player.id} className="text-center">
+                  <p className="text-sm text-muted-foreground mb-1">{player.name}</p>
+                  <p className="text-2xl font-bold text-primary">{player.score}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Puzzle */}
         {renderPuzzle()}
