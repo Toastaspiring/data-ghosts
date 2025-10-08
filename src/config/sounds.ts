@@ -20,11 +20,11 @@ export const SOUND_EFFECTS = {
 
 export const BACKGROUND_MUSIC = {
   // Page-specific music
-  landing: "/sounds/music/landing-cyberpunk.mp3",
-  lobby: "/sounds/music/lobby-ambient.mp3",
-  roomSelection: "/sounds/music/room-selection-tense.mp3",
-  game: "/sounds/music/game-intense.mp3",
-  leaderboard: "/sounds/music/leaderboard-victory.mp3",
+  landing: "/sounds/landing-cyberpunk.mp3",
+  lobby: "/sounds/lobby-ambient.mp3",
+  roomSelection: "/sounds/room-selection-tense.mp3",
+  game: "/sounds/game-intense.mp3",
+  leaderboard: "/sounds/leaderboard-victory.mp3",
 } as const;
 
 // Audio Settings
