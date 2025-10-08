@@ -217,7 +217,7 @@ const Lobby = () => {
           </div>
 
           <p className="text-center text-muted-foreground font-mono">
-            <span className="text-primary">→</span> En attente des hackers • {lobby.players.length}/{lobby.max_players}
+            <span className="text-primary">→</span> En attente des hackers • {lobby.players.length}/3
           </p>
         </div>
 
