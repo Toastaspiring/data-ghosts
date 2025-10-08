@@ -3,11 +3,12 @@
 
 export const SOUND_EFFECTS = {
   // Button Sounds
-  buttonClick: "/sounds/button-click.mp3",
-  buttonHover: "/sounds/button-hover.mp3",
+  buttonClick: "/sounds/click.wav",
+  buttonHover: "/sounds/hover.wav",
   
   // UI Sounds
   success: "/sounds/success.mp3",
+  typing: "/sounds/keyboard.wav",
   error: "/sounds/error.mp3",
   notification: "/sounds/notification.mp3",
   

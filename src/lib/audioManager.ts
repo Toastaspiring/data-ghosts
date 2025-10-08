@@ -20,12 +20,22 @@ class AudioManager {
   private attemptAutoUnlock() {
     // Try to unlock audio automatically when the page loads
     try {
-      this.isUnlocked = true;
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.isUnlocked = true;
+      console.log("🔓 Auto-unlock successful, audio context created");
       this.notifyListeners();
     } catch (error) {
-      // If auto-unlock fails, we'll need user interaction
-      console.log("Auto-unlock failed, will need user interaction");
+      console.log("❌ Auto-unlock failed, will need user interaction:", error);
+      // Set up a one-time click listener to unlock audio
+      const unlockOnClick = () => {
+        console.log("👆 User clicked, attempting to unlock audio...");
+        this.unlockAudio();
+        document.removeEventListener('click', unlockOnClick);
+        document.removeEventListener('touchstart', unlockOnClick);
+      };
+      
+      document.addEventListener('click', unlockOnClick);
+      document.addEventListener('touchstart', unlockOnClick);
     }
   }
 
@@ -60,9 +70,20 @@ class AudioManager {
   }
 
   public unlockAudio() {
-    if (this.isUnlocked) return;
+    if (this.isUnlocked) {
+      // If already unlocked, just resume the audio context if suspended
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+      return;
+    }
+    
     this.isUnlocked = true;
-    this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Create audio context if we don't have one
+    if (!this.audioContext) {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
 
     if (this.musicQueue) {
       this.playMusic(this.musicQueue);
@@ -72,45 +93,70 @@ class AudioManager {
   }
 
   public playMusic(musicKey: BackgroundMusic) {
+    console.log("🎵 playMusic called with:", musicKey, "unlocked:", this.isUnlocked);
+    
     if (!this.isUnlocked) {
+      console.log("🔒 Audio not unlocked, queueing music");
       this.musicQueue = musicKey;
       return;
     }
 
+    // Resume audio context if it's suspended
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      console.log("⏸️ Audio context suspended, resuming...");
+      this.audioContext.resume().then(() => {
+        console.log("▶️ Audio context resumed, continuing with music");
+        this.playMusic(musicKey); // Retry after resuming
+      });
+      return;
+    }
+
     if (this.backgroundMusic && this.backgroundMusic.src.includes(BACKGROUND_MUSIC[musicKey])) {
+      console.log("🎶 Music already playing:", musicKey);
       return;
     }
 
     if (this.backgroundMusic) {
+      console.log("🔄 Stopping current music and starting new one");
       this.fadeOut(this.backgroundMusic, AUDIO_CONFIG.musicFadeOut, () => {
         this.backgroundMusic?.pause();
         this.startNewMusic(musicKey);
       });
     } else {
+      console.log("🎵 Starting new music:", musicKey);
       this.startNewMusic(musicKey);
     }
   }
 
   private startNewMusic(musicKey: BackgroundMusic) {
     const musicUrl = BACKGROUND_MUSIC[musicKey];
+    console.log("🎼 Starting new music:", musicKey, "URL:", musicUrl);
+    
     this.backgroundMusic = new Audio(musicUrl);
     this.backgroundMusic.loop = AUDIO_CONFIG.musicLoop;
     this.backgroundMusic.volume = 0;
 
     // Create media source for Web Audio API if we have an audio context
-    if (this.audioContext && !this.mediaSource) {
+    if (this.audioContext) {
       try {
+        // Always create a new media source for new music
+        console.log("🎧 Creating media source for Web Audio API");
         this.mediaSource = this.audioContext.createMediaElementSource(this.backgroundMusic);
         this.mediaSource.connect(this.audioContext.destination);
+        console.log("✅ Media source created and connected");
       } catch (error) {
-        console.warn("Could not create media source:", error);
+        console.warn("❌ Could not create media source:", error);
       }
+    } else {
+      console.warn("⚠️ No audio context available for media source");
     }
 
+    console.log("▶️ Attempting to play music...");
     this.backgroundMusic.play().then(() => {
+      console.log("🎉 Music started successfully, fading in...");
       this.fadeIn(this.backgroundMusic!, AUDIO_CONFIG.musicFadeIn, AUDIO_CONFIG.musicVolume);
     }).catch(error => {
-      console.error("Error playing background music:", error);
+      console.error("💥 Error playing background music:", error);
     });
   }
 
