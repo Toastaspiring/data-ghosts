@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Shield, Code } from "lucide-react";
+import { useBackgroundMusic } from "@/hooks/useAudio";
+import { AudioButton } from "@/components/ui/AudioButton";
 
 const CreateLobby = () => {
   const [lobbyName, setLobbyName] = useState("");
@@ -13,6 +15,9 @@ const CreateLobby = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Play lobby background music
+  useBackgroundMusic("lobby");
 
   const generateLobbyCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -141,13 +146,13 @@ const CreateLobby = () => {
               />
             </div>
 
-            <Button
+            <AudioButton
               onClick={handleCreateLobby}
               disabled={isLoading}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 text-lg font-mono transition-all hover:scale-105 animate-pulse-glow"
             >
               {isLoading ? "INITIALISATION..." : "DÉMARRER OPÉRATION"}
-            </Button>
+            </AudioButton>
           </div>
 
           <div className="mt-6 p-4 bg-muted/50 border border-border rounded-lg">

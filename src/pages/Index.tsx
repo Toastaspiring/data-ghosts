@@ -2,11 +2,16 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Shield, Users, Target, Zap, Globe, AlertTriangle, Code, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useBackgroundMusic } from "@/hooks/useAudio";
+import { AudioButton } from "@/components/ui/AudioButton";
 
 const Index = () => {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState("");
   const fullText = "Data Ghosts";
+
+  // Play landing page background music
+  useBackgroundMusic("landing");
 
   useEffect(() => {
     let index = 0;
@@ -69,7 +74,7 @@ const Index = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up">
-            <Button
+            <AudioButton
               size="lg"
               onClick={() => navigate("/create-lobby")}
               className="group bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-10 py-7 rounded-lg font-mono relative overflow-hidden transition-all hover:scale-105 animate-pulse-glow"
@@ -77,9 +82,9 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
               <Code className="mr-2 h-5 w-5" />
               CRÉER MISSION
-            </Button>
+            </AudioButton>
             
-            <Button
+            <AudioButton
               size="lg"
               variant="outline"
               onClick={() => navigate("/join-lobby")}
@@ -87,7 +92,7 @@ const Index = () => {
             >
               <Lock className="mr-2 h-5 w-5" />
               REJOINDRE ÉQUIPE
-            </Button>
+            </AudioButton>
           </div>
         </div>
 
@@ -225,14 +230,14 @@ const Index = () => {
               <span className="text-primary font-semibold">Votre mission commence maintenant.</span>
             </p>
             
-            <Button
+            <AudioButton
               size="lg"
               onClick={() => navigate("/create-lobby")}
               className="bg-primary hover:bg-primary/90 text-primary-foreground text-xl px-12 py-8 rounded-lg font-mono animate-pulse-glow transition-all hover:scale-110"
             >
               <Code className="mr-2 h-6 w-6" />
               LANCER L'INFILTRATION
-            </Button>
+            </AudioButton>
           </div>
         </div>
       </section>

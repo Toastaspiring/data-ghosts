@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Lock, Shield } from "lucide-react";
+import { useBackgroundMusic } from "@/hooks/useAudio";
+import { AudioButton } from "@/components/ui/AudioButton";
 
 const JoinLobby = () => {
   const [lobbyCode, setLobbyCode] = useState("");
@@ -13,6 +15,9 @@ const JoinLobby = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Play lobby background music
+  useBackgroundMusic("lobby");
 
   const handleJoinLobby = async () => {
     if (!lobbyCode.trim() || !playerName.trim()) {
@@ -179,13 +184,13 @@ const JoinLobby = () => {
               />
             </div>
 
-            <Button
+            <AudioButton
               onClick={handleJoinLobby}
               disabled={isLoading}
               className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground py-6 text-lg font-mono transition-all hover:scale-105 animate-pulse-glow"
             >
               {isLoading ? "CONNEXION..." : "ACCÉDER À LA MISSION"}
-            </Button>
+            </AudioButton>
           </div>
 
           <div className="mt-6 p-4 bg-muted/50 border border-border rounded-lg">

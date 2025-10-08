@@ -1,0 +1,31 @@
+# Sound Files Directory
+
+Place your sound files here:
+
+## Button Sounds
+- button-click.mp3
+- button-hover.mp3
+
+## UI Sounds
+- success.mp3
+- error.mp3
+- notification.mp3
+
+## Game Sounds
+- puzzle-solved.mp3
+- code-enter.mp3
+- room-unlock.mp3
+- token-collected.mp3
+
+## Background Music (in music/ subdirectory)
+- music/landing-cyberpunk.mp3
+- music/lobby-ambient.mp3
+- music/room-selection-tense.mp3
+- music/game-intense.mp3
+- music/leaderboard-victory.mp3
+
+You can find free cyberpunk/electronic sounds at:
+- freesound.org
+- pixabay.com/music
+- soundbible.com
+- zapsplat.com
