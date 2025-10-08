@@ -52,8 +52,7 @@ const CreateLobby = () => {
             riddles: [],
             totalTime: 0,
           } as any,
-          max_players: 3,
-          current_riddle: 0,
+          current_room: 1,
         }])
         .select()
         .single();
