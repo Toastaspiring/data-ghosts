@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, LogIn } from "lucide-react";
+import { ArrowLeft, Lock, Shield } from "lucide-react";
 
 const JoinLobby = () => {
   const [lobbyCode, setLobbyCode] = useState("");
@@ -120,53 +120,61 @@ const JoinLobby = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
+      
+      <div className="w-full max-w-md relative z-10">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-6 text-muted-foreground hover:text-foreground"
+          className="mb-6 text-muted-foreground hover:text-secondary font-mono border border-border hover:border-secondary transition-all"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Retour
         </Button>
 
-        <div className="bg-card rounded-3xl p-8 cartoon-shadow">
+        <div className="bg-card border-2 border-secondary/30 rounded-lg p-8 cartoon-shadow animate-fade-in-up">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-secondary/20 w-16 h-16 rounded-full flex items-center justify-center">
-              <LogIn className="w-8 h-8 text-secondary" />
+            <div className="bg-secondary/20 w-20 h-20 rounded-lg flex items-center justify-center animate-pulse-glow">
+              <Lock className="w-10 h-10 text-secondary" />
             </div>
           </div>
 
-          <h1 className="text-3xl font-bold text-center mb-8 text-foreground">
-            Rejoindre un Lobby
+          <h1 className="text-4xl font-bold text-center mb-2 neon-purple font-mono">
+            REJOINDRE ÉQUIPE
           </h1>
+          <p className="text-center text-muted-foreground mb-8 font-mono text-sm">
+            Entrer le code d'accès sécurisé
+          </p>
 
           <div className="space-y-6">
             <div>
-              <Label htmlFor="lobbyCode" className="text-foreground">
-                Code du Lobby
+              <Label htmlFor="lobbyCode" className="text-foreground font-mono flex items-center gap-2">
+                <Lock className="w-4 h-4 text-secondary" />
+                Code d'Accès
               </Label>
               <Input
                 id="lobbyCode"
-                placeholder="123456"
+                placeholder="000000"
                 value={lobbyCode}
                 onChange={(e) => setLobbyCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                className="mt-2 rounded-xl text-center text-2xl tracking-widest font-bold"
+                className="mt-2 bg-input border-border focus:border-secondary text-center text-3xl tracking-[0.5em] font-bold font-mono neon-purple"
                 maxLength={6}
               />
             </div>
 
             <div>
-              <Label htmlFor="playerName" className="text-foreground">
-                Votre Nom
+              <Label htmlFor="playerName" className="text-foreground font-mono flex items-center gap-2">
+                <Shield className="w-4 h-4 text-secondary" />
+                Nom de Code (Hacker)
               </Label>
               <Input
                 id="playerName"
-                placeholder="Explorateur"
+                placeholder="Ghost_002"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                className="mt-2 rounded-xl"
+                className="mt-2 bg-input border-border focus:border-secondary font-mono"
                 maxLength={20}
               />
             </div>
@@ -174,15 +182,15 @@ const JoinLobby = () => {
             <Button
               onClick={handleJoinLobby}
               disabled={isLoading}
-              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-xl py-6 text-lg transition-all hover:scale-105"
+              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground py-6 text-lg font-mono transition-all hover:scale-105 animate-pulse-glow"
             >
-              {isLoading ? "Connexion..." : "Rejoindre"}
+              {isLoading ? "CONNEXION..." : "ACCÉDER À LA MISSION"}
             </Button>
           </div>
 
-          <div className="mt-6 p-4 bg-muted rounded-xl">
-            <p className="text-sm text-muted-foreground text-center">
-              Entrez le code à 6 chiffres partagé par l'hôte
+          <div className="mt-6 p-4 bg-muted/50 border border-border rounded-lg">
+            <p className="text-sm text-muted-foreground text-center font-mono">
+              <span className="text-secondary">→</span> Code fourni par le chef d'équipe
             </p>
           </div>
         </div>

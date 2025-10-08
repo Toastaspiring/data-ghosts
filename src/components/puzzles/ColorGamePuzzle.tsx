@@ -25,18 +25,18 @@ export const ColorGamePuzzle = ({ targetColor, onSolve }: ColorGamePuzzleProps) 
   };
 
   return (
-    <div className="bg-card rounded-3xl p-8 cartoon-shadow">
+    <div className="bg-card border-2 border-primary/30 rounded-lg p-8 cartoon-shadow animate-fade-in-up">
       <div className="flex items-center gap-3 mb-6">
-        <Palette className="w-8 h-8 text-primary" />
-        <h3 className="text-2xl font-bold text-foreground">Jeu de Couleurs du Fond Vert</h3>
+        <Palette className="w-8 h-8 text-primary animate-pulse-glow" />
+        <h3 className="text-3xl font-bold neon-cyan font-mono">Jeu de Couleurs du Fond Vert</h3>
       </div>
 
       <div className="mb-8">
         <div
-          className="w-full h-48 rounded-2xl cartoon-shadow transition-colors duration-300"
+          className="w-full h-48 rounded-lg cartoon-shadow transition-colors duration-300 border-2 border-border"
           style={{ backgroundColor: currentColor }}
         />
-        <p className="text-center mt-4 text-muted-foreground">
+        <p className="text-center mt-4 text-muted-foreground font-mono">
           Ajustez la lumière pour ruiner l'éclairage
         </p>
       </div>
@@ -46,10 +46,11 @@ export const ColorGamePuzzle = ({ targetColor, onSolve }: ColorGamePuzzleProps) 
           <Button
             key={color.value}
             onClick={() => handleColorClick(color.value)}
-            className="h-20 text-lg"
+            className="h-20 text-lg font-mono border-2 transition-all hover:scale-105"
             style={{
               backgroundColor: color.value,
               color: color.value === "#FFFF00" ? "#000" : "#fff",
+              borderColor: currentColor === color.value ? "#0ff" : "transparent"
             }}
           >
             {color.name}

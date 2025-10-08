@@ -186,68 +186,71 @@ const Lobby = () => {
   const allReady = lobby.players.every((p) => p.ready || p.isHost);
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-4xl py-8">
+    <div className="min-h-screen bg-background p-4 relative overflow-hidden">
+      {/* Animated Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
+      
+      <div className="container mx-auto max-w-4xl py-8 relative z-10">
         {/* Lobby Header */}
-        <div className="bg-card rounded-3xl p-8 cartoon-shadow mb-6">
-          <h1 className="text-4xl font-bold text-center mb-4 text-foreground">
+        <div className="bg-card border-2 border-primary/30 rounded-lg p-8 cartoon-shadow mb-6 animate-fade-in-up">
+          <h1 className="text-5xl font-bold text-center mb-4 neon-cyan font-mono">
             {lobby.name}
           </h1>
 
           <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="bg-primary/20 px-6 py-3 rounded-xl">
-              <p className="text-sm text-muted-foreground mb-1">Code du Lobby</p>
+            <div className="bg-primary/20 border-2 border-primary px-8 py-4 rounded-lg animate-pulse-glow">
+              <p className="text-sm text-muted-foreground mb-1 font-mono">CODE D'ACCÈS</p>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold tracking-widest text-primary">
+                <span className="text-4xl font-bold tracking-[0.3em] neon-cyan font-mono">
                   {lobby.code.toString()}
                 </span>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={copyLobbyCode}
-                  className="hover:bg-primary/10"
+                  className="hover:bg-primary/10 border border-primary/50 hover:border-primary transition-all"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-4 w-4 text-primary" />
                 </Button>
               </div>
             </div>
           </div>
 
-          <p className="text-center text-muted-foreground">
-            En attente des joueurs • {lobby.players.length}/{lobby.max_players}
+          <p className="text-center text-muted-foreground font-mono">
+            <span className="text-primary">→</span> En attente des hackers • {lobby.players.length}/{lobby.max_players}
           </p>
         </div>
 
         {/* Players List */}
-        <div className="bg-card rounded-3xl p-8 cartoon-shadow mb-6">
-          <h2 className="text-2xl font-bold mb-6 text-foreground">Joueurs</h2>
+        <div className="bg-card border-2 border-secondary/30 rounded-lg p-8 cartoon-shadow mb-6">
+          <h2 className="text-3xl font-bold mb-6 neon-purple font-mono">ÉQUIPE DATA GHOSTS</h2>
           <div className="space-y-4">
             {lobby.players.map((player) => (
               <div
                 key={player.id}
-                className="flex items-center justify-between p-4 bg-muted rounded-xl"
+                className="flex items-center justify-between p-4 bg-muted/50 border-2 border-border hover:border-primary rounded-lg transition-all hover:scale-105"
               >
                 <div className="flex items-center gap-3">
-                  <div className="bg-primary/20 w-12 h-12 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-primary" />
+                  <div className="bg-primary/20 border-2 border-primary w-14 h-14 rounded-lg flex items-center justify-center animate-pulse-glow">
+                    <User className="w-7 h-7 text-primary" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">{player.name}</span>
+                      <span className="font-semibold text-foreground font-mono">{player.name}</span>
                       {player.isHost && (
-                        <Crown className="w-4 h-4 text-accent" />
+                        <Crown className="w-5 h-5 text-accent" />
                       )}
                     </div>
                     {player.id === playerId && (
-                      <span className="text-xs text-muted-foreground">Vous</span>
+                      <span className="text-xs text-primary font-mono">• VOUS</span>
                     )}
                   </div>
                 </div>
 
                 {player.ready || player.isHost ? (
-                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <CheckCircle className="w-7 h-7 text-primary animate-pulse" />
                 ) : (
-                  <Circle className="w-6 h-6 text-muted-foreground" />
+                  <Circle className="w-7 h-7 text-muted-foreground" />
                 )}
               </div>
             ))}
@@ -259,13 +262,13 @@ const Lobby = () => {
           {!currentPlayer?.isHost && (
             <Button
               onClick={toggleReady}
-              className={`w-full py-6 rounded-xl text-lg transition-all hover:scale-105 ${
+              className={`w-full py-7 text-lg font-mono transition-all hover:scale-105 ${
                 currentPlayer?.ready
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground animate-pulse-glow"
+                  : "bg-muted hover:bg-muted/80 text-foreground border-2 border-primary"
               }`}
             >
-              {currentPlayer?.ready ? "Prêt ✓" : "Je suis prêt !"}
+              {currentPlayer?.ready ? "✓ PRÊT POUR LA MISSION" : "SE PRÉPARER"}
             </Button>
           )}
 
@@ -273,19 +276,19 @@ const Lobby = () => {
             <Button
               onClick={startGame}
               disabled={!allReady}
-              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-6 rounded-xl text-lg transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground py-7 text-lg font-mono transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse-glow"
             >
-              <Play className="mr-2 h-5 w-5" />
-              Commencer la Partie
+              <Play className="mr-2 h-6 w-6" />
+              LANCER L'OPÉRATION
             </Button>
           )}
 
           <Button
             variant="outline"
             onClick={() => navigate("/")}
-            className="w-full rounded-xl py-6 text-lg border-2"
+            className="w-full py-7 text-lg font-mono border-2 border-border hover:border-destructive hover:text-destructive transition-all"
           >
-            Quitter le Lobby
+            QUITTER LA MISSION
           </Button>
         </div>
       </div>

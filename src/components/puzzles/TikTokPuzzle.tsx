@@ -28,33 +28,33 @@ export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: Ti
   };
 
   return (
-    <div className="bg-card rounded-3xl p-8 cartoon-shadow">
+    <div className="bg-card border-2 border-primary/30 rounded-lg p-8 cartoon-shadow animate-fade-in-up">
       <div className="flex items-center gap-3 mb-6">
-        <Hash className="w-8 h-8 text-primary" />
-        <h3 className="text-2xl font-bold text-foreground">Sabotage des Hashtags</h3>
+        <Hash className="w-8 h-8 text-primary animate-pulse-glow" />
+        <h3 className="text-3xl font-bold neon-cyan font-mono">Sabotage des Hashtags</h3>
       </div>
 
       <div className="space-y-4">
         {hashtags.map((hashtag, index) => (
-          <div key={index} className="flex items-center gap-4 bg-secondary/10 rounded-xl p-4">
-            <span className="text-2xl font-bold flex-1 text-foreground">{hashtag}</span>
+          <div key={index} className="flex items-center gap-4 bg-muted/50 border-2 border-border hover:border-primary rounded-lg p-4 transition-all">
+            <span className="text-2xl font-bold flex-1 text-foreground font-mono">{hashtag}</span>
             {hashtag === originalHashtags[index] ? (
               <Button
                 onClick={() => handleReplace(index)}
                 variant="outline"
-                className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                className="border-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground font-mono"
               >
-                Saboter
+                SABOTER
               </Button>
             ) : (
-              <Check className="w-6 h-6 text-green-500" />
+              <Check className="w-6 h-6 text-primary animate-pulse" />
             )}
           </div>
         ))}
       </div>
 
-      <div className="mt-6 text-center text-muted-foreground">
-        {replacedCount}/{originalHashtags.length} hashtags sabotés
+      <div className="mt-6 text-center text-muted-foreground font-mono">
+        <span className="text-primary">{replacedCount}</span>/{originalHashtags.length} hashtags sabotés
       </div>
     </div>
   );

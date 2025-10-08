@@ -435,32 +435,37 @@ const Game = () => {
   // Room 4 requires codes
   if (lobby.current_room === 4 && lobby.collected_codes.length < 3) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="container mx-auto max-w-3xl py-8 flex items-center justify-center min-h-[80vh]">
-          <div className="bg-card rounded-3xl p-12 cartoon-shadow text-center w-full">
-            <Lock className="w-32 h-32 text-primary mx-auto mb-6" />
-            <h1 className="text-4xl font-bold mb-6 text-foreground">Salle Verrouillée</h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              Vous devez obtenir les 3 codes des salles précédentes pour accéder à la salle finale
+      <div className="min-h-screen bg-background p-4 relative overflow-hidden">
+        {/* Animated Background Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
+        
+        <div className="container mx-auto max-w-3xl py-8 flex items-center justify-center min-h-[80vh] relative z-10">
+          <div className="bg-card border-2 border-destructive rounded-lg p-12 cartoon-shadow text-center w-full animate-fade-in-up">
+            <Lock className="w-32 h-32 text-destructive mx-auto mb-6 animate-pulse-glow" />
+            <h1 className="text-5xl font-bold mb-6 neon-pink font-mono">ACCÈS REFUSÉ</h1>
+            <p className="text-xl text-muted-foreground mb-8 font-mono">
+              Vous devez collecter les 3 tokens des salles précédentes
+              <br />
+              pour accéder au Control Hub
             </p>
             
             <div className="mb-8">
-              <p className="text-lg text-muted-foreground mb-4">Entrez un code:</p>
+              <p className="text-lg text-muted-foreground mb-4 font-mono">ENTRER TOKEN:</p>
               <div className="flex gap-4 max-w-md mx-auto">
                 <Input
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleCodeSubmit()}
-                  placeholder="Code..."
-                  className="rounded-xl py-6 text-lg text-center font-mono"
+                  placeholder="TOKEN_****"
+                  className="bg-input border-2 border-border focus:border-primary py-6 text-lg text-center font-mono"
                   maxLength={4}
                 />
                 <Button
                   onClick={handleCodeSubmit}
                   disabled={codeInput.length !== 4}
-                  className="rounded-xl py-6 px-8"
+                  className="bg-primary hover:bg-primary/90 py-6 px-8 font-mono"
                 >
-                  Valider
+                  VALIDER
                 </Button>
               </div>
             </div>
@@ -469,10 +474,10 @@ const Game = () => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold ${
+                  className={`w-20 h-20 rounded-lg flex items-center justify-center text-2xl font-bold border-2 font-mono ${
                     lobby.collected_codes.length >= i
-                      ? "bg-green-500/20 text-green-500"
-                      : "bg-secondary/20 text-muted-foreground"
+                      ? "bg-primary/20 text-primary border-primary animate-pulse-glow"
+                      : "bg-muted/50 text-muted-foreground border-border"
                   }`}
                 >
                   {lobby.collected_codes.length >= i ? "✓" : "?"}
@@ -486,22 +491,25 @@ const Game = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="container mx-auto max-w-3xl py-8">
+    <div className="min-h-screen bg-background p-4 relative overflow-hidden">
+      {/* Animated Background Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
+      
+      <div className="container mx-auto max-w-3xl py-8 relative z-10">
         {/* Game Header */}
         <div className="flex justify-between items-center mb-6">
-          <div className="bg-card rounded-2xl px-6 py-3 cartoon-shadow">
+          <div className="bg-card border-2 border-primary px-6 py-3 cartoon-shadow animate-pulse-glow rounded-lg">
             <div className="flex items-center gap-2">
               <Timer className="w-5 h-5 text-primary" />
-              <span className="text-2xl font-bold text-foreground">
+              <span className="text-3xl font-bold neon-cyan font-mono">
                 {formatTime(elapsedTime)}
               </span>
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl px-6 py-3 cartoon-shadow">
-            <p className="text-sm text-muted-foreground mb-1">Salle</p>
-            <p className="text-xl font-bold text-foreground">
+          <div className="bg-card border-2 border-secondary px-6 py-3 cartoon-shadow rounded-lg">
+            <p className="text-sm text-muted-foreground mb-1 font-mono">SALLE</p>
+            <p className="text-2xl font-bold neon-purple font-mono text-center">
               {lobby.current_room} / 4
             </p>
           </div>
@@ -509,19 +517,19 @@ const Game = () => {
 
         {/* Room Info */}
         {currentRoom && (
-          <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
+          <div className="bg-card border-2 border-primary/30 rounded-lg p-6 cartoon-shadow mb-6">
             {lobby.parallel_mode && assignedRoom && (
-              <div className="mb-4 bg-primary/10 border-2 border-primary rounded-xl p-3">
-                <p className="text-sm font-semibold text-primary">
-                  🎯 Votre mission: Salle {assignedRoom}
+              <div className="mb-4 bg-primary/10 border-2 border-primary rounded-lg p-3">
+                <p className="text-sm font-semibold text-primary font-mono">
+                  🎯 VOTRE MISSION: SALLE {assignedRoom}
                 </p>
               </div>
             )}
-            <h2 className="text-2xl font-bold text-foreground mb-2">{currentRoom.title}</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-2 font-mono">{currentRoom.title}</h2>
             <p className="text-muted-foreground">{currentRoom.description}</p>
             <div className="mt-4 flex gap-2">
-              <span className="text-sm text-primary font-semibold">
-                Énigme {currentPuzzleIndex + 1}/{currentRoomPuzzles.length}
+              <span className="text-sm text-primary font-semibold font-mono bg-primary/10 px-3 py-1 rounded border border-primary">
+                ÉNIGME {currentPuzzleIndex + 1}/{currentRoomPuzzles.length}
               </span>
             </div>
           </div>
@@ -551,18 +559,18 @@ const Game = () => {
           <Button
             onClick={() => setShowHint(true)}
             variant="outline"
-            className="w-full mt-4 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-xl py-6"
+            className="w-full mt-4 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground py-6 font-mono transition-all hover:scale-105"
           >
             <Lightbulb className="w-5 h-5 mr-2" />
-            Afficher un indice
+            AFFICHER INDICE
           </Button>
         )}
 
         {showHint && currentPuzzle?.hint && (
-          <div className="bg-accent/10 rounded-2xl p-4 mt-4 border-2 border-accent">
+          <div className="bg-accent/10 rounded-lg p-4 mt-4 border-2 border-accent animate-fade-in-up">
             <div className="flex items-start gap-2">
               <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-              <p className="text-accent-foreground">{currentPuzzle.hint}</p>
+              <p className="text-accent-foreground font-mono">{currentPuzzle.hint}</p>
             </div>
           </div>
         )}
