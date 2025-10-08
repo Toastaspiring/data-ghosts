@@ -62,6 +62,8 @@ const RoomSelection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
+  const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
+  const [dragOverRoom, setDragOverRoom] = useState<number | null>(null);
 
   useEffect(() => {
     if (!lobbyId || !playerId) {
@@ -133,14 +135,16 @@ const RoomSelection = () => {
     };
   }, [lobbyId, playerId, navigate, toast]);
 
-  const handleRoomSelect = async (roomNumber: number) => {
-    if (!lobby || !playerId) return;
+  const handleRoomSelect = async (roomNumber: number, targetPlayerId: string) => {
+    if (!lobby) return;
 
     const currentAssignments = lobby.player_assignments || {};
     
-    // Check if room is already taken
-    const roomTaken = Object.values(currentAssignments).includes(roomNumber);
-    if (roomTaken) {
+    // Check if room is already taken by someone else
+    const roomOccupantId = Object.keys(currentAssignments).find(
+      (id) => currentAssignments[id] === roomNumber
+    );
+    if (roomOccupantId && roomOccupantId !== targetPlayerId) {
       toast({
         title: "Salle occupée",
         description: "Cette salle a déjà été choisie par un autre hacker",
@@ -152,7 +156,7 @@ const RoomSelection = () => {
     // Update player's room assignment
     const updatedAssignments = {
       ...currentAssignments,
-      [playerId]: roomNumber,
+      [targetPlayerId]: roomNumber,
     };
 
     const { error } = await supabase
@@ -169,11 +173,44 @@ const RoomSelection = () => {
       return;
     }
 
-    setSelectedRoom(roomNumber);
-    toast({
-      title: "Salle sélectionnée !",
-      description: `Vous avez choisi ${rooms.find(r => r.number === roomNumber)?.name}`,
-    });
+    if (targetPlayerId === playerId) {
+      setSelectedRoom(roomNumber);
+      toast({
+        title: "Salle sélectionnée !",
+        description: `Vous avez choisi ${rooms.find(r => r.number === roomNumber)?.name}`,
+      });
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, pId: string) => {
+    if (pId !== playerId) return; // Only allow dragging own card
+    setDraggedPlayerId(pId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPlayerId(null);
+    setDragOverRoom(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, roomNumber: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverRoom(roomNumber);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverRoom(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, roomNumber: number) => {
+    e.preventDefault();
+    setDragOverRoom(null);
+    
+    if (!draggedPlayerId || draggedPlayerId !== playerId) return;
+    
+    await handleRoomSelect(roomNumber, draggedPlayerId);
+    setDraggedPlayerId(null);
   };
 
   const startGame = async () => {
@@ -267,22 +304,70 @@ const RoomSelection = () => {
           </p>
         </div>
 
+        {/* Unassigned Players Pool */}
+        <div className="bg-card border-2 border-primary/30 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 neon-cyan font-mono flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            HACKERS EN ATTENTE
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {lobby.players
+              .filter((player) => !assignments[player.id])
+              .map((player) => (
+                <div
+                  key={player.id}
+                  draggable={player.id === playerId}
+                  onDragStart={(e) => handleDragStart(e, player.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`bg-gradient-to-r from-primary/20 to-secondary/20 border-2 border-primary rounded-lg p-4 flex items-center gap-3 min-w-[200px] transition-all ${
+                    player.id === playerId
+                      ? "cursor-grab active:cursor-grabbing hover:scale-105 hover:shadow-lg hover:shadow-primary/50"
+                      : "opacity-70 cursor-not-allowed"
+                  } ${draggedPlayerId === player.id ? "opacity-50 scale-95" : ""}`}
+                >
+                  <div className="bg-primary/30 border-2 border-primary w-12 h-12 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground font-mono">
+                      {player.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {player.id === playerId ? "Glissez vers une salle" : "En attente"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            {lobby.players.filter((player) => !assignments[player.id]).length === 0 && (
+              <p className="text-muted-foreground font-mono text-sm">
+                Tous les hackers ont été assignés
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Rooms Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {rooms.map((room) => {
             const assignedPlayer = getRoomPlayer(room.number);
             const isSelected = selectedRoom === room.number;
-            const isTaken = !!assignedPlayer && assignedPlayer.id !== playerId;
+            const isTaken = !!assignedPlayer;
+            const isDragOver = dragOverRoom === room.number;
 
             return (
               <div
                 key={room.number}
+                onDragOver={(e) => handleDragOver(e, room.number)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, room.number)}
                 className={`bg-card border-2 rounded-lg p-6 transition-all ${
-                  isSelected
-                    ? "border-primary scale-105 animate-pulse-glow"
+                  isDragOver
+                    ? "border-primary scale-105 bg-primary/5 shadow-lg shadow-primary/50"
+                    : isSelected
+                    ? "border-primary scale-105"
                     : isTaken
-                    ? "border-destructive opacity-60"
-                    : "border-border hover:border-primary hover:scale-105"
+                    ? "border-muted"
+                    : "border-border hover:border-primary/50"
                 }`}
               >
                 <div className={`h-2 rounded-full bg-gradient-to-r ${room.color} mb-4`} />
@@ -293,9 +378,6 @@ const RoomSelection = () => {
                   </h3>
                   {isSelected && (
                     <Check className="w-6 h-6 text-primary animate-pulse" />
-                  )}
-                  {isTaken && (
-                    <Lock className="w-6 h-6 text-destructive" />
                   )}
                 </div>
 
@@ -309,64 +391,39 @@ const RoomSelection = () => {
                   </p>
                 </div>
 
-                {assignedPlayer && (
-                  <div className="bg-primary/10 border border-primary rounded px-3 py-2 mb-4">
-                    <p className="text-sm font-mono text-primary font-semibold flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      {assignedPlayer.name}
-                      {assignedPlayer.id === playerId && " (Vous)"}
-                    </p>
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => handleRoomSelect(room.number)}
-                  disabled={isTaken || isSelected}
-                  className={`w-full py-6 font-mono transition-all ${
-                    isSelected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted hover:bg-muted/80 border-2 border-primary hover:scale-105"
+                {/* Drop Zone / Assigned Player */}
+                <div
+                  className={`min-h-[80px] rounded-lg border-2 border-dashed flex items-center justify-center transition-all ${
+                    isDragOver
+                      ? "border-primary bg-primary/10 scale-105"
+                      : assignedPlayer
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/30 bg-muted/30"
                   }`}
                 >
-                  {isSelected ? "SALLE SÉLECTIONNÉE" : isTaken ? "OCCUPÉE" : "SÉLECTIONNER"}
-                </Button>
+                  {assignedPlayer ? (
+                    <div className="flex items-center gap-3 p-3">
+                      <div className="bg-primary/30 border-2 border-primary w-10 h-10 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground font-mono">
+                          {assignedPlayer.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {assignedPlayer.id === playerId ? "Vous" : "Assigné"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground font-mono text-center px-4">
+                      {isDragOver ? "Déposez ici" : "Glissez un hacker ici"}
+                    </p>
+                  )}
+                </div>
               </div>
             );
           })}
-        </div>
-
-        {/* Players Status */}
-        <div className="bg-card border-2 border-secondary/30 rounded-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4 neon-purple font-mono">STATUT DE L'ÉQUIPE</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {lobby.players.map((player) => {
-              const assignedRoom = assignments[player.id];
-              const room = rooms.find((r) => r.number === assignedRoom);
-
-              return (
-                <div
-                  key={player.id}
-                  className="flex items-center gap-3 p-4 bg-muted/50 border-2 border-border rounded-lg"
-                >
-                  <div className="bg-primary/20 border-2 border-primary w-12 h-12 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground font-mono">
-                      {player.name}
-                      {player.id === playerId && " (Vous)"}
-                    </p>
-                    <p className="text-sm text-muted-foreground font-mono">
-                      {room ? `🎯 ${room.name}` : "En attente..."}
-                    </p>
-                  </div>
-                  {assignedRoom && (
-                    <Check className="w-5 h-5 text-primary" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
 
         {/* Actions */}
