@@ -6,12 +6,27 @@ class AudioManager {
   private static instance: AudioManager;
   private audioContext: AudioContext | null = null;
   private backgroundMusic: HTMLAudioElement | null = null;
+  private mediaSource: MediaElementAudioSourceNode | null = null;
   private isUnlocked = false;
   private musicQueue: BackgroundMusic | null = null;
   private listeners: Listener[] = [];
 
   private constructor() {
     // Private constructor for singleton pattern
+    // Auto-unlock audio on page load
+    this.attemptAutoUnlock();
+  }
+
+  private attemptAutoUnlock() {
+    // Try to unlock audio automatically when the page loads
+    try {
+      this.isUnlocked = true;
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.notifyListeners();
+    } catch (error) {
+      // If auto-unlock fails, we'll need user interaction
+      console.log("Auto-unlock failed, will need user interaction");
+    }
   }
 
   public static getInstance(): AudioManager {
@@ -22,6 +37,12 @@ class AudioManager {
   }
 
   public getIsUnlocked = () => this.isUnlocked;
+
+  public getAudioContext = () => this.audioContext;
+  
+  public getBackgroundMusic = () => this.backgroundMusic;
+
+  public getMediaSource = () => this.mediaSource;
 
   public addListener(listener: Listener) {
     this.listeners.push(listener);
@@ -76,6 +97,16 @@ class AudioManager {
     this.backgroundMusic.loop = AUDIO_CONFIG.musicLoop;
     this.backgroundMusic.volume = 0;
 
+    // Create media source for Web Audio API if we have an audio context
+    if (this.audioContext && !this.mediaSource) {
+      try {
+        this.mediaSource = this.audioContext.createMediaElementSource(this.backgroundMusic);
+        this.mediaSource.connect(this.audioContext.destination);
+      } catch (error) {
+        console.warn("Could not create media source:", error);
+      }
+    }
+
     this.backgroundMusic.play().then(() => {
       this.fadeIn(this.backgroundMusic!, AUDIO_CONFIG.musicFadeIn, AUDIO_CONFIG.musicVolume);
     }).catch(error => {
@@ -88,6 +119,7 @@ class AudioManager {
       this.fadeOut(this.backgroundMusic, AUDIO_CONFIG.musicFadeOut, () => {
         this.backgroundMusic?.pause();
         this.backgroundMusic = null;
+        this.mediaSource = null; // Reset media source when stopping music
       });
     }
   }
