@@ -8,103 +8,99 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 50 29% 98%;
-    --foreground: 263 30% 25%;
+    /* Cyberpunk Dark Theme - Data Ghosts */
+    --background: 220 15% 8%;
+    --foreground: 180 100% 90%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 263 30% 25%;
+    --card: 220 15% 12%;
+    --card-foreground: 180 100% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 263 30% 25%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 180 100% 90%;
 
-    --primary: 263 83% 78%;
-    --primary-foreground: 263 30% 25%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 220 15% 8%;
 
-    --secondary: 203 100% 85%;
-    --secondary-foreground: 263 30% 25%;
+    --secondary: 280 100% 65%;
+    --secondary-foreground: 220 15% 8%;
 
-    --muted: 329 100% 95%;
-    --muted-foreground: 263 20% 55%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 180 50% 60%;
 
-    --accent: 329 100% 87%;
-    --accent-foreground: 263 30% 25%;
+    --accent: 330 100% 55%;
+    --accent-foreground: 220 15% 8%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 263 30% 90%;
-    --input: 263 30% 95%;
-    --ring: 263 83% 78%;
+    --border: 180 50% 25%;
+    --input: 220 15% 15%;
+    --ring: 180 100% 50%;
     
-    --yellow-pastel: 48 100% 84%;
-    --gradient-pastel: linear-gradient(135deg, hsl(263, 83%, 78%), hsl(203, 100%, 85%));
-    --gradient-hero: linear-gradient(135deg, hsl(329, 100%, 87%), hsl(263, 83%, 78%));
+    /* Cyberpunk Gradients */
+    --gradient-cyber: linear-gradient(135deg, hsl(180, 100%, 50%), hsl(280, 100%, 65%));
+    --gradient-hero: linear-gradient(135deg, hsl(220, 15%, 12%), hsl(180, 100%, 20%));
+    --gradient-danger: linear-gradient(135deg, hsl(330, 100%, 55%), hsl(0, 84%, 60%));
     
-    --shadow-soft: 0 4px 20px hsl(263 83% 78% / 0.15);
-    --shadow-card: 0 8px 30px hsl(263 83% 78% / 0.2);
+    /* Neon Shadows */
+    --shadow-neon-cyan: 0 0 20px hsl(180 100% 50% / 0.5), 0 0 40px hsl(180 100% 50% / 0.3);
+    --shadow-neon-purple: 0 0 20px hsl(280 100% 65% / 0.5), 0 0 40px hsl(280 100% 65% / 0.3);
+    --shadow-neon-pink: 0 0 20px hsl(330 100% 55% / 0.5), 0 0 40px hsl(330 100% 55% / 0.3);
+    --shadow-card: 0 8px 30px hsl(180 100% 50% / 0.15);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    --radius: 1.5rem;
-
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 180 100% 90%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 220 15% 8%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 180 100% 90%;
+    --sidebar-border: 180 50% 25%;
+    --sidebar-ring: 180 100% 50%;
   }
 
   .dark {
-    --background: 263 35% 12%;
-    --foreground: 263 10% 95%;
+    /* Same theme for dark mode consistency */
+    --background: 220 15% 8%;
+    --foreground: 180 100% 90%;
 
-    --card: 263 30% 15%;
-    --card-foreground: 263 10% 95%;
+    --card: 220 15% 12%;
+    --card-foreground: 180 100% 90%;
 
-    --popover: 263 30% 15%;
-    --popover-foreground: 263 10% 95%;
+    --popover: 220 15% 10%;
+    --popover-foreground: 180 100% 90%;
 
-    --primary: 263 83% 78%;
-    --primary-foreground: 263 30% 15%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 220 15% 8%;
 
-    --secondary: 203 80% 50%;
-    --secondary-foreground: 263 10% 95%;
+    --secondary: 280 100% 65%;
+    --secondary-foreground: 220 15% 8%;
 
-    --muted: 263 20% 25%;
-    --muted-foreground: 263 20% 65%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 180 50% 60%;
 
-    --accent: 329 80% 60%;
-    --accent-foreground: 263 10% 95%;
+    --accent: 330 100% 55%;
+    --accent-foreground: 220 15% 8%;
 
-    --destructive: 0 62.8% 50%;
-    --destructive-foreground: 263 10% 95%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 263 30% 25%;
-    --input: 263 30% 22%;
-    --ring: 263 83% 78%;
+    --border: 180 50% 25%;
+    --input: 220 15% 15%;
+    --ring: 180 100% 50%;
     
-    --shadow-soft: 0 4px 20px hsl(263 83% 50% / 0.3);
-    --shadow-card: 0 8px 30px hsl(263 83% 50% / 0.4);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --shadow-card: 0 8px 30px hsl(180 100% 50% / 0.15);
+    --sidebar-background: 220 15% 10%;
+    --sidebar-foreground: 180 100% 90%;
+    --sidebar-primary: 180 100% 50%;
+    --sidebar-primary-foreground: 220 15% 8%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 180 100% 90%;
+    --sidebar-border: 180 50% 25%;
+    --sidebar-ring: 180 100% 50%;
   }
 }
 
@@ -115,27 +111,143 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  /* Cyberpunk Effects */
   .cartoon-shadow {
     box-shadow: var(--shadow-card);
   }
   
-  .pastel-gradient {
-    background: var(--gradient-pastel);
+  .neon-cyan {
+    text-shadow: var(--shadow-neon-cyan);
+    color: hsl(180, 100%, 50%);
+  }
+  
+  .neon-purple {
+    text-shadow: var(--shadow-neon-purple);
+    color: hsl(280, 100%, 65%);
+  }
+  
+  .neon-pink {
+    text-shadow: var(--shadow-neon-pink);
+    color: hsl(330, 100%, 55%);
+  }
+  
+  .cyber-gradient {
+    background: var(--gradient-cyber);
   }
   
   .hero-gradient {
     background: var(--gradient-hero);
   }
   
+  /* Matrix Rain Effect */
+  .matrix-rain {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .matrix-rain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, hsl(180, 100%, 50%, 0.1) 100%);
+    animation: matrix-scroll 20s linear infinite;
+  }
+  
+  @keyframes matrix-scroll {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+  
+  /* Glitch Effect */
+  @keyframes glitch {
+    0%, 100% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      transform: translate(-2px, -2px);
+    }
+    60% {
+      transform: translate(2px, 2px);
+    }
+    80% {
+      transform: translate(2px, -2px);
+    }
+  }
+  
+  .glitch:hover {
+    animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  }
+  
+  /* Typing Animation */
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+  
+  @keyframes blink-caret {
+    from, to {
+      border-color: transparent;
+    }
+    50% {
+      border-color: hsl(180, 100%, 50%);
+    }
+  }
+  
+  .typing-effect {
+    overflow: hidden;
+    border-right: 3px solid hsl(180, 100%, 50%);
+    white-space: nowrap;
+    animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+  
+  /* Scan Lines */
+  @keyframes scan {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+  
+  .scan-lines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      transparent 50%,
+      hsl(180, 100%, 50%, 0.05) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    animation: scan 8s linear infinite;
+  }
+  
+  /* Float Animation */
   @keyframes float {
     0%, 100% {
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-10px);
+      transform: translateY(-20px);
     }
   }
   
@@ -143,18 +255,64 @@ All colors MUST be HSL.
     animation: float 3s ease-in-out infinite;
   }
   
-  @keyframes pulse-soft {
+  /* Pulse Glow */
+  @keyframes pulse-glow {
     0%, 100% {
-      opacity: 1;
-      transform: scale(1);
+      box-shadow: 0 0 5px hsl(180, 100%, 50%, 0.5), 0 0 10px hsl(180, 100%, 50%, 0.3);
     }
     50% {
-      opacity: 0.8;
-      transform: scale(1.05);
+      box-shadow: 0 0 20px hsl(180, 100%, 50%, 0.8), 0 0 30px hsl(180, 100%, 50%, 0.5);
     }
   }
   
-  .animate-pulse-soft {
-    animation: pulse-soft 2s ease-in-out infinite;
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  /* Slide In */
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.6s ease-out;
+  }
+  
+  /* Fade In Up */
+  @keyframes fade-in-up {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
   }
 }

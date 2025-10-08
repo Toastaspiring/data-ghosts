@@ -106,7 +106,8 @@ export default {
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
       },
       fontFamily: {
-        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
     },
   },
