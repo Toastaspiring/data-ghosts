@@ -43,9 +43,14 @@ export type Database = {
       lobbies: {
         Row: {
           code: number
+          collected_codes: Json | null
+          completed_puzzles: Json | null
           created_at: string
+          current_room: number | null
           game_state: Json
+          hints_used: number | null
           id: string
+          last_hint_time: string | null
           name: string
           players: Json
           solution: string
@@ -53,9 +58,14 @@ export type Database = {
         }
         Insert: {
           code: number
+          collected_codes?: Json | null
+          completed_puzzles?: Json | null
           created_at?: string
+          current_room?: number | null
           game_state?: Json
+          hints_used?: number | null
           id?: string
+          last_hint_time?: string | null
           name: string
           players?: Json
           solution: string
@@ -63,13 +73,98 @@ export type Database = {
         }
         Update: {
           code?: number
+          collected_codes?: Json | null
+          completed_puzzles?: Json | null
           created_at?: string
+          current_room?: number | null
           game_state?: Json
+          hints_used?: number | null
           id?: string
+          last_hint_time?: string | null
           name?: string
           players?: Json
           solution?: string
           status?: string
+        }
+        Relationships: []
+      }
+      puzzles: {
+        Row: {
+          answer: string | null
+          created_at: string
+          description: string
+          hint: string | null
+          id: string
+          order_index: number
+          puzzle_data: Json
+          puzzle_type: string
+          room_id: string
+          title: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          description: string
+          hint?: string | null
+          id?: string
+          order_index: number
+          puzzle_data?: Json
+          puzzle_type: string
+          room_id: string
+          title: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          description?: string
+          hint?: string | null
+          id?: string
+          order_index?: number
+          puzzle_data?: Json
+          puzzle_type?: string
+          room_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puzzles_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          code_reward: string | null
+          created_at: string
+          description: string
+          id: string
+          order_index: number
+          room_number: number
+          theme: string
+          title: string
+        }
+        Insert: {
+          code_reward?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          order_index: number
+          room_number: number
+          theme: string
+          title: string
+        }
+        Update: {
+          code_reward?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          order_index?: number
+          room_number?: number
+          theme?: string
+          title?: string
         }
         Relationships: []
       }

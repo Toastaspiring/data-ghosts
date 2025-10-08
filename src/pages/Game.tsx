@@ -4,17 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Timer, Lightbulb, Trophy } from "lucide-react";
+import { Timer, Lightbulb, Trophy, Lock } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { CaptchaPuzzle } from "@/components/puzzles/CaptchaPuzzle";
+import { TikTokPuzzle } from "@/components/puzzles/TikTokPuzzle";
+import { ColorGamePuzzle } from "@/components/puzzles/ColorGamePuzzle";
+import { CorruptPuzzle } from "@/components/puzzles/CorruptPuzzle";
+import { VideoTimecodePuzzle } from "@/components/puzzles/VideoTimecodePuzzle";
+import { FinalButtonPuzzle } from "@/components/puzzles/FinalButtonPuzzle";
+import { ActionPuzzle } from "@/components/puzzles/ActionPuzzle";
+import { SevenDifferencesPuzzle } from "@/components/puzzles/SevenDifferencesPuzzle";
 
-interface Riddle {
+interface Room {
   id: string;
+  room_number: number;
   title: string;
   description: string;
-  question: string;
-  answer: string;
+  theme: string;
+  code_reward: string | null;
+  order_index: number;
+}
+
+interface Puzzle {
+  id: string;
+  room_id: string;
+  title: string;
+  description: string;
+  puzzle_type: string;
+  puzzle_data: any;
+  answer: string | null;
   hint: string | null;
-  category: string;
   order_index: number;
 }
 
@@ -28,9 +47,13 @@ interface Lobby {
   id: string;
   name: string;
   players: Player[];
-  current_riddle?: number;
+  current_room: number;
+  collected_codes: string[];
+  completed_puzzles: string[];
   timer_started_at?: string;
   status: string;
+  hints_used: number;
+  last_hint_time: string | null;
 }
 
 const Game = () => {
@@ -38,12 +61,13 @@ const Game = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [lobby, setLobby] = useState<Lobby | null>(null);
-  const [riddles, setRiddles] = useState<Riddle[]>([]);
-  const [currentRiddleIndex, setCurrentRiddleIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [currentRoomPuzzles, setCurrentRoomPuzzles] = useState<Puzzle[]>([]);
+  const [currentPuzzleIndex, setCurrentPuzzleIndex] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
+  const [codeInput, setCodeInput] = useState("");
 
   useEffect(() => {
     if (!lobbyId || !playerId) {
@@ -73,24 +97,37 @@ const Game = () => {
       }
 
       setLobby(lobbyData as any);
-      setCurrentRiddleIndex((lobbyData as any).current_riddle || 0);
 
-      // Fetch riddles
-      const { data: riddlesData, error: riddlesError } = await (supabase as any)
-        .from("riddles")
+      // Fetch all rooms
+      const { data: roomsData, error: roomsError } = await supabase
+        .from("rooms")
         .select("*")
         .order("order_index", { ascending: true });
 
-      if (riddlesError || !riddlesData) {
+      if (roomsError || !roomsData) {
         toast({
           title: "Erreur",
-          description: "Impossible de charger les énigmes",
+          description: "Impossible de charger les salles",
           variant: "destructive",
         });
         return;
       }
 
-      setRiddles(riddlesData as any);
+      setRooms(roomsData as Room[]);
+
+      // Fetch puzzles for current room
+      const currentRoom = roomsData.find((r) => r.room_number === (lobbyData as any).current_room);
+      if (currentRoom) {
+        const { data: puzzlesData, error: puzzlesError } = await supabase
+          .from("puzzles")
+          .select("*")
+          .eq("room_id", currentRoom.id)
+          .order("order_index", { ascending: true });
+
+        if (!puzzlesError && puzzlesData) {
+          setCurrentRoomPuzzles(puzzlesData as Puzzle[]);
+        }
+      }
 
       // Start timer
       if ((lobbyData as any).timer_started_at) {
@@ -118,7 +155,6 @@ const Game = () => {
         (payload) => {
           const newData = payload.new as any;
           setLobby(newData as Lobby);
-          setCurrentRiddleIndex(newData.current_riddle || 0);
 
           // If game is finished, navigate to leaderboard
           if (newData.status === "finished") {
@@ -134,47 +170,37 @@ const Game = () => {
     };
   }, [lobbyId, playerId, navigate, toast]);
 
-  const normalizeAnswer = (str: string) => {
-    return str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim();
-  };
+  const handlePuzzleSolved = async () => {
+    if (!lobby || !currentRoomPuzzles.length) return;
 
-  const handleSubmitAnswer = async () => {
-    if (!lobby || !riddles.length || !answer.trim()) return;
+    const currentPuzzle = currentRoomPuzzles[currentPuzzleIndex];
+    const completedPuzzles = [...lobby.completed_puzzles, currentPuzzle.id];
 
-    const currentRiddle = riddles[currentRiddleIndex];
-    const isCorrect =
-      normalizeAnswer(answer) === normalizeAnswer(currentRiddle.answer);
+    // Update player score
+    const updatedPlayers = lobby.players.map((player) =>
+      player.id === playerId
+        ? { ...player, score: player.score + 100 }
+        : player
+    );
 
-    if (isCorrect) {
+    // Check if all puzzles in current room are completed
+    if (currentPuzzleIndex + 1 >= currentRoomPuzzles.length) {
+      const currentRoom = rooms.find((r) => r.room_number === lobby.current_room);
+      const collectedCodes = currentRoom?.code_reward 
+        ? [...lobby.collected_codes, currentRoom.code_reward]
+        : lobby.collected_codes;
+
       toast({
-        title: "Bravo ! 🎉",
-        description: "Réponse correcte !",
+        title: "Salle Terminée ! 🎉",
+        description: currentRoom?.code_reward 
+          ? `Code obtenu: ${currentRoom.code_reward}`
+          : "Passez à la salle suivante !",
       });
 
-      // Update player score
-      const updatedPlayers = lobby.players.map((player) =>
-        player.id === playerId
-          ? { ...player, score: player.score + 100 }
-          : player
-      );
-
-      // Check if this was the last riddle
-      const nextRiddleIndex = currentRiddleIndex + 1;
-      const isLastRiddle = nextRiddleIndex >= riddles.length;
-
-      const updates: any = {
-        players: updatedPlayers,
-        current_riddle: nextRiddleIndex,
-      };
-
-      if (isLastRiddle) {
-        updates.status = "finished";
-
-        // Save to leaderboard
+      // Move to next room or finish
+      const nextRoom = lobby.current_room + 1;
+      if (nextRoom > 4) {
+        // Game finished
         await supabase.from("leaderboard").insert([{
           lobby_id: lobby.id,
           player_names: lobby.players.map((p) => p.name) as any,
@@ -182,18 +208,105 @@ const Game = () => {
           time_taken: elapsedTime,
           finished_at: new Date().toISOString(),
         }]);
+
+        await supabase.from("lobbies").update({
+          status: "finished",
+          players: updatedPlayers as any,
+          collected_codes: collectedCodes as any,
+          completed_puzzles: completedPuzzles as any,
+        }).eq("id", lobby.id);
+      } else {
+        await supabase.from("lobbies").update({
+          current_room: nextRoom,
+          players: updatedPlayers as any,
+          collected_codes: collectedCodes as any,
+          completed_puzzles: completedPuzzles as any,
+        }).eq("id", lobby.id);
+
+        // Reload puzzles for new room
+        const newRoom = rooms.find((r) => r.room_number === nextRoom);
+        if (newRoom) {
+          const { data: puzzlesData } = await supabase
+            .from("puzzles")
+            .select("*")
+            .eq("room_id", newRoom.id)
+            .order("order_index", { ascending: true });
+
+          if (puzzlesData) {
+            setCurrentRoomPuzzles(puzzlesData as Puzzle[]);
+            setCurrentPuzzleIndex(0);
+          }
+        }
       }
-
-      await supabase.from("lobbies").update(updates).eq("id", lobby.id);
-
-      setAnswer("");
-      setShowHint(false);
     } else {
+      // Move to next puzzle in room
+      setCurrentPuzzleIndex(currentPuzzleIndex + 1);
+      await supabase.from("lobbies").update({
+        players: updatedPlayers as any,
+        completed_puzzles: completedPuzzles as any,
+      }).eq("id", lobby.id);
+
       toast({
-        title: "Incorrect",
-        description: "Essayez encore !",
+        title: "Bravo ! 🎉",
+        description: "Énigme résolue !",
+      });
+    }
+
+    setShowHint(false);
+  };
+
+  const handleCodeSubmit = async () => {
+    if (!lobby) return;
+
+    if (lobby.collected_codes.includes(codeInput)) {
+      toast({
+        title: "Code déjà utilisé",
+        description: "Ce code a déjà été entré",
         variant: "destructive",
       });
+      return;
+    }
+
+    const expectedCodes = ["2847", "9153", "6294"];
+    if (!expectedCodes.includes(codeInput)) {
+      toast({
+        title: "Code incorrect",
+        description: "Ce code n'est pas valide",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newCodes = [...lobby.collected_codes, codeInput];
+    await supabase.from("lobbies").update({
+      collected_codes: newCodes as any,
+    }).eq("id", lobby.id);
+
+    setCodeInput("");
+    toast({
+      title: "Code accepté ! ✅",
+      description: `Codes: ${newCodes.length}/3`,
+    });
+
+    // If all 3 codes are collected, allow access to room 4
+    if (newCodes.length === 3) {
+      await supabase.from("lobbies").update({
+        current_room: 4,
+      }).eq("id", lobby.id);
+
+      const room4 = rooms.find((r) => r.room_number === 4);
+      if (room4) {
+        const { data: puzzlesData } = await supabase
+          .from("puzzles")
+          .select("*")
+          .eq("room_id", room4.id)
+          .order("order_index", { ascending: true });
+
+        if (puzzlesData) {
+          setCurrentRoomPuzzles(puzzlesData as Puzzle[]);
+          setCurrentPuzzleIndex(0);
+        }
+      }
     }
   };
 
@@ -203,7 +316,7 @@ const Game = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  if (!lobby || !riddles.length) {
+  if (!lobby || !rooms.length) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -214,19 +327,126 @@ const Game = () => {
     );
   }
 
-  if (currentRiddleIndex >= riddles.length) {
+  const currentRoom = rooms.find((r) => r.room_number === lobby.current_room);
+  const currentPuzzle = currentRoomPuzzles[currentPuzzleIndex];
+
+  // Render puzzle based on type
+  const renderPuzzle = () => {
+    if (!currentPuzzle) return null;
+
+    const puzzleData = currentPuzzle.puzzle_data;
+
+    switch (currentPuzzle.puzzle_type) {
+      case "captcha":
+        return <CaptchaPuzzle captchaText={puzzleData.captcha_text} onSolve={handlePuzzleSolved} />;
+      
+      case "tiktok":
+        return (
+          <TikTokPuzzle
+            originalHashtags={puzzleData.original_hashtags}
+            sabotageHashtags={puzzleData.sabotage_hashtags}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "7differences":
+        return <SevenDifferencesPuzzle onSolve={handlePuzzleSolved} />;
+      
+      case "color-game":
+        return (
+          <ColorGamePuzzle
+            targetColor={puzzleData.target_color}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "corrupt":
+        return (
+          <CorruptPuzzle
+            options={puzzleData.options}
+            correctAnswer={currentPuzzle.answer || ""}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "video-timecode":
+        return (
+          <VideoTimecodePuzzle
+            correctTime={puzzleData.correct_time}
+            password={puzzleData.password}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      case "action":
+        return <ActionPuzzle actionType={puzzleData.action_type} onSolve={handlePuzzleSolved} />;
+      
+      case "final-button":
+        return (
+          <FinalButtonPuzzle
+            clicksRequired={puzzleData.clicks_required}
+            countdownDuration={puzzleData.countdown_duration}
+            onSolve={handlePuzzleSolved}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  // Room 4 requires codes
+  if (lobby.current_room === 4 && lobby.collected_codes.length < 3) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Trophy className="w-20 h-20 text-accent mx-auto mb-4 animate-pulse-soft" />
-          <h1 className="text-4xl font-bold mb-4 text-foreground">Terminé !</h1>
-          <p className="text-muted-foreground">Redirection...</p>
+      <div className="min-h-screen bg-background p-4">
+        <div className="container mx-auto max-w-3xl py-8 flex items-center justify-center min-h-[80vh]">
+          <div className="bg-card rounded-3xl p-12 cartoon-shadow text-center w-full">
+            <Lock className="w-32 h-32 text-primary mx-auto mb-6" />
+            <h1 className="text-4xl font-bold mb-6 text-foreground">Salle Verrouillée</h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Vous devez obtenir les 3 codes des salles précédentes pour accéder à la salle finale
+            </p>
+            
+            <div className="mb-8">
+              <p className="text-lg text-muted-foreground mb-4">Entrez un code:</p>
+              <div className="flex gap-4 max-w-md mx-auto">
+                <Input
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleCodeSubmit()}
+                  placeholder="Code..."
+                  className="rounded-xl py-6 text-lg text-center font-mono"
+                  maxLength={4}
+                />
+                <Button
+                  onClick={handleCodeSubmit}
+                  disabled={codeInput.length !== 4}
+                  className="rounded-xl py-6 px-8"
+                >
+                  Valider
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className={`w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold ${
+                    lobby.collected_codes.length >= i
+                      ? "bg-green-500/20 text-green-500"
+                      : "bg-secondary/20 text-muted-foreground"
+                  }`}
+                >
+                  {lobby.collected_codes.length >= i ? "✓" : "?"}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
   }
-
-  const currentRiddle = riddles[currentRiddleIndex];
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -243,12 +463,25 @@ const Game = () => {
           </div>
 
           <div className="bg-card rounded-2xl px-6 py-3 cartoon-shadow">
-            <p className="text-sm text-muted-foreground mb-1">Énigme</p>
+            <p className="text-sm text-muted-foreground mb-1">Salle</p>
             <p className="text-xl font-bold text-foreground">
-              {currentRiddleIndex + 1} / {riddles.length}
+              {lobby.current_room} / 4
             </p>
           </div>
         </div>
+
+        {/* Room Info */}
+        {currentRoom && (
+          <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
+            <h2 className="text-2xl font-bold text-foreground mb-2">{currentRoom.title}</h2>
+            <p className="text-muted-foreground">{currentRoom.description}</p>
+            <div className="mt-4 flex gap-2">
+              <span className="text-sm text-primary font-semibold">
+                Énigme {currentPuzzleIndex + 1}/{currentRoomPuzzles.length}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Players Scores */}
         <div className="bg-card rounded-3xl p-6 cartoon-shadow mb-6">
@@ -262,67 +495,29 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Riddle Card */}
-        <div className="bg-card rounded-3xl p-8 cartoon-shadow mb-6">
-          <div className="mb-4">
-            <span className="inline-block bg-secondary/20 text-secondary px-4 py-2 rounded-full text-sm font-semibold">
-              {currentRiddle.category}
-            </span>
-          </div>
+        {/* Puzzle */}
+        {renderPuzzle()}
 
-          <h2 className="text-3xl font-bold mb-4 text-foreground">
-            {currentRiddle.title}
-          </h2>
+        {/* Hint Button */}
+        {currentPuzzle?.hint && !showHint && (
+          <Button
+            onClick={() => setShowHint(true)}
+            variant="outline"
+            className="w-full mt-4 border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-xl py-6"
+          >
+            <Lightbulb className="w-5 h-5 mr-2" />
+            Afficher un indice
+          </Button>
+        )}
 
-          <p className="text-lg text-muted-foreground mb-6">
-            {currentRiddle.description}
-          </p>
-
-          <div className="bg-primary/10 rounded-2xl p-6 mb-6">
-            <p className="text-xl font-semibold text-foreground">
-              {currentRiddle.question}
-            </p>
-          </div>
-
-          {showHint && currentRiddle.hint && (
-            <div className="bg-accent/10 rounded-2xl p-4 mb-6 border-2 border-accent">
-              <div className="flex items-start gap-2">
-                <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-                <p className="text-accent-foreground">{currentRiddle.hint}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <Input
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSubmitAnswer()}
-              placeholder="Votre réponse..."
-              className="rounded-xl py-6 text-lg"
-            />
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleSubmitAnswer}
-                disabled={!answer.trim()}
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 text-lg transition-all hover:scale-105"
-              >
-                Valider
-              </Button>
-
-              {currentRiddle.hint && !showHint && (
-                <Button
-                  onClick={() => setShowHint(true)}
-                  variant="outline"
-                  className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-xl px-6"
-                >
-                  <Lightbulb className="w-5 h-5" />
-                </Button>
-              )}
+        {showHint && currentPuzzle?.hint && (
+          <div className="bg-accent/10 rounded-2xl p-4 mt-4 border-2 border-accent">
+            <div className="flex items-start gap-2">
+              <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
+              <p className="text-accent-foreground">{currentPuzzle.hint}</p>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
