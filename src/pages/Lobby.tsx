@@ -143,29 +143,8 @@ const Lobby = () => {
       return;
     }
 
-    // Phase 3: Assign rooms to players (1, 2, 3)
-    const playerAssignments: Record<string, number> = {};
-    lobby.players.forEach((player, index) => {
-      // Assign room 1, 2, or 3 based on player index
-      playerAssignments[player.id] = (index % 3) + 1;
-    });
-
-    const { error } = await supabase
-      .from("lobbies")
-      .update({
-        status: "playing",
-        parallel_mode: true,
-        player_assignments: playerAssignments as any,
-      })
-      .eq("id", lobby.id);
-
-    if (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de démarrer la partie",
-        variant: "destructive",
-      });
-    }
+    // Navigate to room selection instead of starting game directly
+    navigate(`/room-selection/${lobby.id}`);
   };
 
   if (isLoading) {

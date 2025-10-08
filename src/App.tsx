@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import CreateLobby from "./pages/CreateLobby";
 import JoinLobby from "./pages/JoinLobby";
 import Lobby from "./pages/Lobby";
+import RoomSelection from "./pages/RoomSelection";
 import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/create-lobby" element={<CreateLobby />} />
           <Route path="/join-lobby" element={<JoinLobby />} />
           <Route path="/lobby/:lobbyId" element={<Lobby />} />
+          <Route path="/room-selection/:lobbyId" element={<RoomSelection />} />
           <Route path="/game/:lobbyId" element={<Game />} />
           <Route path="/leaderboard/:lobbyId" element={<Leaderboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
