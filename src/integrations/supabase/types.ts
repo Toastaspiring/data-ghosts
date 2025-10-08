@@ -173,7 +173,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_puzzle_answer: {
+        Args: { puzzle_id: string; submitted_answer: string }
+        Returns: boolean
+      }
+      get_puzzle_for_game: {
+        Args: { puzzle_id: string }
+        Returns: {
+          description: string
+          hint: string
+          id: string
+          order_index: number
+          puzzle_data: Json
+          puzzle_type: string
+          room_id: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
