@@ -147,8 +147,6 @@ const Lobby = () => {
       .from("lobbies")
       .update({
         status: "playing",
-        started_at: new Date().toISOString(),
-        timer_started_at: new Date().toISOString(),
       })
       .eq("id", lobby.id);
 
