@@ -1,31 +1,51 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Shield, Users, Target, Zap, Globe, AlertTriangle, Code, Lock } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useBackgroundMusic } from "@/hooks/useAudio";
 import { AudioButton } from "@/components/ui/AudioButton";
 import { AudioPrompt } from "@/components/ui/AudioPrompt";
+import { useAudio } from "@/hooks/useAudio";
 
 const Index = () => {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState("");
   const fullText = "Data Ghosts";
+  const { playSound } = useAudio();
+  const typingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Play landing page background music
   useBackgroundMusic("landing");
 
   useEffect(() => {
     let index = 0;
+    // Start typing sound
+    typingAudioRef.current = new Audio("/sounds/keyboard.wav");
+    typingAudioRef.current.loop = true;
+    typingAudioRef.current.volume = 0.5;
+    typingAudioRef.current.play().catch(() => {});
+    
     const timer = setInterval(() => {
       if (index <= fullText.length) {
         setTypedText(fullText.slice(0, index));
         index++;
       } else {
         clearInterval(timer);
+        // Stop typing sound
+        if (typingAudioRef.current) {
+          typingAudioRef.current.pause();
+          typingAudioRef.current.currentTime = 0;
+        }
       }
     }, 150);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (typingAudioRef.current) {
+        typingAudioRef.current.pause();
+        typingAudioRef.current.currentTime = 0;
+      }
+    };
   }, []);
 
   return (

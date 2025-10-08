@@ -8,6 +8,7 @@ export const SOUND_EFFECTS = {
   
   // UI Sounds
   success: "/sounds/success.mp3",
+  typing: "/sounds/keyboard.wav",
   error: "/sounds/error.mp3",
   notification: "/sounds/notification.mp3",
   
