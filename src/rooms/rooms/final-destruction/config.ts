@@ -56,7 +56,7 @@ export const finalDestructionConfig: RoomConfig = {
       description: 'Entrez les trois codes obtenus dans les salles précédentes pour déverrouiller la chambre finale.',
       position: { x: 200, y: 280 },
       size: { width: 120, height: 100 },
-      dependencies: [],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -109,7 +109,7 @@ export const finalDestructionConfig: RoomConfig = {
       description: 'LE bouton rouge ! Appuyez pour lancer la séquence de destruction finale d\'Insta-Vibe.',
       position: { x: 650, y: 250 },
       size: { width: 150, height: 150 },
-      dependencies: ['three-code-entry'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -120,7 +120,7 @@ export const finalDestructionConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'button-spam-sequence',
@@ -174,7 +174,7 @@ export const finalDestructionConfig: RoomConfig = {
       description: 'Le compte à rebours final avant l\'explosion ! 30 secondes pour s\'échapper !',
       position: { x: 750, y: 550 },
       size: { width: 100, height: 80 },
-      dependencies: ['red-button-activation'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -185,7 +185,7 @@ export const finalDestructionConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'countdown-escape',
@@ -231,7 +231,7 @@ export const finalDestructionConfig: RoomConfig = {
       description: 'Vous avez réussi ! Regardez l\'explosion depuis l\'extérieur du bâtiment.',
       position: { x: 100, y: 650 },
       size: { width: 80, height: 60 },
-      dependencies: ['countdown-timer'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'score',
@@ -246,7 +246,7 @@ export const finalDestructionConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'victory-sequence',

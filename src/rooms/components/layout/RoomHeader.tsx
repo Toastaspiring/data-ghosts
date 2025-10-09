@@ -42,18 +42,8 @@ export const RoomHeader: React.FC<RoomHeaderProps> = ({
     )}>
       {/* Top Row */}
       <div className="flex items-center justify-between mb-4">
-        {/* Left: Exit button and room info */}
+        {/* Left: Room info */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onExit}
-            className="neon-border hover:neon-glow transition-all duration-300"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Exit Room
-          </Button>
-          
           <div className="space-y-1">
             <h1 className="text-xl font-bold font-mono neon-cyan">
               {roomName}

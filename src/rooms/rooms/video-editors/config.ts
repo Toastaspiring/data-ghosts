@@ -62,7 +62,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Choisissez comment corrompre le monteur principal : argent, chantage, ou sabotage technique.',
       position: { x: 200, y: 280 },
       size: { width: 120, height: 80 },
-      dependencies: [],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -136,7 +136,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Les contrats de licence des logiciels de montage. Trouvez les clauses pour suspendre leur accès.',
       position: { x: 950, y: 200 },
       size: { width: 100, height: 80 },
-      dependencies: ['corruption-choice'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -147,7 +147,7 @@ export const videoEditorsConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'contract-analysis',
@@ -195,7 +195,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Le monteur part, laissant un post-it avec le mot de passe TikTok sur son écran.',
       position: { x: 580, y: 380 },
       size: { width: 140, height: 90 },
-      dependencies: ['contract-documents'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'crossRoom',
@@ -217,7 +217,7 @@ export const videoEditorsConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'password-discovery',
@@ -264,7 +264,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Mettez en pause une vidéo au bon moment pour révéler des informations cachées.',
       position: { x: 1280, y: 480 },
       size: { width: 150, height: 120 },
-      dependencies: ['editor-exodus'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -275,7 +275,7 @@ export const videoEditorsConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'video-timecode-analysis',
@@ -315,7 +315,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Sabotez discrètement leur équipement : débranchez des câbles ou renversez de l\'eau.',
       position: { x: 350, y: 700 },
       size: { width: 180, height: 150 },
-      dependencies: ['timecode-puzzle'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -326,7 +326,7 @@ export const videoEditorsConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'subtle-sabotage',
@@ -391,7 +391,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Un bloc-notes avec la liste des hashtags à éviter. Informations utiles pour la salle 1.',
       position: { x: 120, y: 350 },
       size: { width: 80, height: 60 },
-      dependencies: ['equipment-sabotage'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'crossRoom',
@@ -413,7 +413,7 @@ export const videoEditorsConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'hashtag-analysis',

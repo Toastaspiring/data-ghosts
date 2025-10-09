@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { InteractionType } from '../../core/types';
 import { useRoom, useRoomProgress, useRoomClues, useRoomInventory } from '../../core/RoomProvider';
 import { useAudioManager } from '@/hooks/useAudioManager';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, CheckCircle2, Zap } from 'lucide-react';
+import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, CheckCircle2, Zap, Unlock } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RoomLayoutProps {
   onElementInteract: (elementId: string, interactionType: InteractionType) => void;
@@ -33,9 +35,13 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const { clues } = useRoomClues();
   const { items: inventory } = useRoomInventory();
   const { playMusicFromUrl, unlockAudio, isAudioUnlocked } = useAudioManager();
+  const navigate = useNavigate();
+  const { lobbyId } = useParams();
   const [timeRemaining, setTimeRemaining] = useState(2700); // 45 minutes
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [completedPuzzles, setCompletedPuzzles] = useState<string[]>([]);
+  const [showCodeReveal, setShowCodeReveal] = useState(false);
+  const [roomCode, setRoomCode] = useState<string>('');
 
   // Enhanced audio initialization with retry mechanism
   useEffect(() => {
@@ -109,25 +115,38 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
     return 'text-primary';
   };
 
-  // Sequential puzzle logic
-  const getNextAvailablePuzzle = () => {
-    const totalElements = config.elements.length;
-    const completedCount = completedPuzzles.length;
-    
-    if (completedCount >= totalElements) return null;
-    
-    // Return the next puzzle in sequence
-    return config.elements[completedCount];
-  };
-
+  // All puzzles are unlocked from the start
   const isPuzzleUnlocked = (elementId: string) => {
-    const elementIndex = config.elements.findIndex(el => el.id === elementId);
-    return elementIndex <= completedPuzzles.length;
+    return true; // All puzzles can be done in any order
   };
 
   const handlePuzzleComplete = (puzzleId: string, solution: any) => {
     if (solution && !completedPuzzles.includes(puzzleId)) {
-      setCompletedPuzzles(prev => [...prev, puzzleId]);
+      const newCompletedPuzzles = [...completedPuzzles, puzzleId];
+      setCompletedPuzzles(newCompletedPuzzles);
+      
+      // Check if all puzzles are now complete
+      if (newCompletedPuzzles.length === config.elements.length) {
+        // Generate room code from config or use a default
+        const code = config.metadata?.tags?.[0] || `CODE-${config.id.substring(0, 4).toUpperCase()}`;
+        setRoomCode(code);
+        setShowCodeReveal(true);
+        
+        toast.success('🎉 Toutes les missions terminées !', {
+          description: 'Vous avez débloqué le code de la salle !'
+        });
+        
+        // Navigate to final room after a delay
+        setTimeout(() => {
+          toast.info('Transfert vers la salle de contrôle...', {
+            duration: 2000
+          });
+          setTimeout(() => {
+            // Navigate to final room (room 4)
+            navigate(`/game/${lobbyId}/room/final-destruction`);
+          }, 2000);
+        }, 5000);
+      }
     }
     onPuzzleComplete(puzzleId, solution);
   };
@@ -164,15 +183,6 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
         <div className="mb-6 animate-fade-in-up">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => exitRoom()}
-                className="border-primary/50 hover:border-primary glitch hover:animate-pulse-glow transition-all duration-300"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Quitter
-              </Button>
               <div>
                 <h1 className="text-4xl font-bold neon-cyan font-mono typing-effect">
                   {config.name}
@@ -240,19 +250,19 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
               <CardHeader className="hero-gradient">
                 <CardTitle className="flex items-center gap-2 neon-cyan font-mono text-2xl">
                   <Target className="w-6 h-6" />
-                  Missions Séquentielles
+                  Missions
                 </CardTitle>
                 <CardDescription className="text-lg">
-                  Complétez les missions dans l'ordre pour progresser
+                  Complétez les missions dans n'importe quel ordre
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid gap-4">
                   {config.elements.map((element, index) => {
                     const isCompleted = completedPuzzles.includes(element.id);
-                    const isUnlocked = isPuzzleUnlocked(element.id);
+                    const isUnlocked = true; // All puzzles unlocked
                     const isActive = activeElement === element.id;
-                    const isCurrent = index === completedPuzzles.length && !isCompleted;
+                    const isCurrent = !isCompleted && isActive;
                     
                     return (
                       <Card 
@@ -260,12 +270,10 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                         className={`cursor-pointer transition-all duration-500 hover:scale-105 transform ${
                           isActive ? 'border-primary ring-2 ring-primary/50 animate-pulse-glow' :
                           isCompleted ? 'border-green-500 bg-green-500/10 cartoon-shadow' :
-                          isCurrent ? 'border-accent ring-2 ring-accent/50 animate-pulse-glow' :
-                          isUnlocked ? 'border-secondary/50 hover:border-secondary' :
-                          'border-muted opacity-50 cursor-not-allowed grayscale'
+                          'border-secondary/50 hover:border-secondary'
                         }`}
                         onClick={() => {
-                          if (isUnlocked && !isCompleted) {
+                          if (!isCompleted) {
                             onElementInteract(element.id, 'click');
                           }
                         }}
@@ -275,18 +283,15 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                             <div className="flex items-center gap-4">
                               <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${
                                 isCompleted ? 'bg-green-500 text-background' :
-                                isCurrent ? 'bg-accent text-background animate-pulse' :
-                                isUnlocked ? 'bg-secondary/20 text-secondary' :
-                                'bg-muted text-muted-foreground'
+                                isActive ? 'bg-accent text-background animate-pulse' :
+                                'bg-secondary/20 text-secondary'
                               }`}>
                                 {isCompleted ? (
                                   <CheckCircle2 className="w-6 h-6" />
-                                ) : isCurrent ? (
+                                ) : isActive ? (
                                   <Play className="w-6 h-6" />
-                                ) : isUnlocked ? (
-                                  index + 1
                                 ) : (
-                                  <Lock className="w-6 h-6" />
+                                  index + 1
                                 )}
                               </div>
                               <div>
@@ -300,32 +305,13 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                                   ✓ Terminé
                                 </Badge>
                               )}
-                              {isCurrent && (
-                                <Badge variant="default" className="bg-accent animate-pulse">
-                                  <Zap className="w-3 h-3 mr-1" />
-                                  En cours
-                                </Badge>
-                              )}
-                              {!isUnlocked && (
-                                <Badge variant="secondary" className="opacity-50">
-                                  <Lock className="w-3 h-3 mr-1" />
-                                  Verrouillé
-                                </Badge>
-                              )}
-                              {isActive && (
+                              {isActive && !isCompleted && (
                                 <Badge variant="outline" className="border-primary text-primary animate-pulse">
                                   Actif
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          
-                          {/* Progress bar for current puzzle */}
-                          {isCurrent && (
-                            <div className="mt-4">
-                              <Progress value={0} className="h-2 animate-pulse" />
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
                     );
@@ -337,34 +323,6 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
 
           {/* Enhanced Sidebar - Clues & Inventory */}
           <div className="space-y-4 animate-slide-in-right">
-            {/* Next Mission Preview */}
-            {(() => {
-              const nextPuzzle = getNextAvailablePuzzle();
-              return nextPuzzle && (
-                <Card className="border-accent/30 cartoon-shadow">
-                  <CardHeader className="cyber-gradient">
-                    <CardTitle className="flex items-center gap-2 neon-pink font-mono">
-                      <Zap className="w-5 h-5" />
-                      Mission Suivante
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="p-4 bg-accent/10 rounded border border-accent/30">
-                      <h4 className="font-semibold text-accent font-mono">{nextPuzzle.name}</h4>
-                      <p className="text-sm text-muted-foreground mt-1">{nextPuzzle.description}</p>
-                      <Button 
-                        size="sm" 
-                        className="mt-3 w-full bg-accent hover:bg-accent/90"
-                        onClick={() => onElementInteract(nextPuzzle.id, 'click')}
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Commencer
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })()}
 
             {/* Enhanced Clues */}
             {clues.length > 0 && (
@@ -495,6 +453,46 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                     >
                       Abandonner
                     </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Code Reveal Modal */}
+        {showCodeReveal && (
+          <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+            <Card className="max-w-2xl w-full border-green-500 cartoon-shadow animate-scale-in">
+              <CardHeader className="bg-gradient-to-r from-green-500/20 to-primary/20 border-b border-green-500/50">
+                <CardTitle className="flex items-center gap-3 neon-cyan font-mono text-3xl justify-center">
+                  <Unlock className="w-10 h-10 text-green-500 animate-pulse" />
+                  Code Débloqué !
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="text-center space-y-6">
+                  <div className="text-6xl mb-6 animate-bounce">🎉</div>
+                  <h3 className="text-2xl font-semibold mb-4 text-green-500">
+                    Félicitations ! Toutes les missions sont terminées !
+                  </h3>
+                  <p className="text-muted-foreground mb-6 text-lg">
+                    Vous avez débloqué le code de cette salle. Notez-le bien, vous en aurez besoin dans la salle de contrôle finale.
+                  </p>
+                  
+                  {/* Code Display */}
+                  <div className="bg-background/50 border-2 border-green-500 rounded-lg p-8 mb-6">
+                    <div className="text-sm text-muted-foreground mb-2 font-mono">CODE DE LA SALLE</div>
+                    <div className="text-6xl font-bold font-mono neon-cyan tracking-widest animate-pulse-glow">
+                      {roomCode}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>Transfert automatique vers la salle de contrôle finale dans quelques secondes...</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>

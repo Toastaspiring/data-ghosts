@@ -74,7 +74,7 @@ export const underwaterLabConfig: RoomConfig = {
       position: { x: 200, y: 180 },
       size: { width: 80, height: 80 },
       component: 'MicroscopeElement',
-      dependencies: [],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -137,7 +137,7 @@ export const underwaterLabConfig: RoomConfig = {
       position: { x: 700, y: 120 },
       size: { width: 100, height: 60 },
       component: 'ComputerTerminal',
-      dependencies: ['microscope'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -148,7 +148,7 @@ export const underwaterLabConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'data-decryption',
@@ -195,7 +195,7 @@ export const underwaterLabConfig: RoomConfig = {
       position: { x: 120, y: 580 },
       size: { width: 90, height: 120 },
       component: 'SpecimenVault',
-      dependencies: ['computer-terminal'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'item',
@@ -207,7 +207,7 @@ export const underwaterLabConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'bio-containment',
@@ -262,14 +262,14 @@ export const underwaterLabConfig: RoomConfig = {
       position: { x: 950, y: 650 },
       size: { width: 60, height: 40 },
       component: 'ExitControl',
-      dependencies: ['specimen-vault'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'score',
           data: { points: 500, category: 'room-completion' }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false
     }
   ],

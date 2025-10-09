@@ -62,7 +62,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Un téléphone verrouillé par un captcha. Résolvez-le pour accéder au système.',
       position: { x: 150, y: 250 },
       size: { width: 80, height: 120 },
-      dependencies: [],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -117,7 +117,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Remplacez les hashtags tendance par des alternatives pour saboter la viralité.',
       position: { x: 450, y: 350 },
       size: { width: 150, height: 100 },
-      dependencies: ['phone-captcha'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -128,7 +128,7 @@ export const tiktokFarmConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'hashtag-replacement',
@@ -176,7 +176,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Créez une vidéo TikTok qui surpasse les influenceurs en utilisant les indices des autres salles.',
       position: { x: 250, y: 650 },
       size: { width: 100, height: 80 },
-      dependencies: ['hashtag-sabotage'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -187,7 +187,7 @@ export const tiktokFarmConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'viral-creation',
@@ -237,7 +237,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Corrigez les fausses informations affichées sur le tableau blanc pour créer le chaos.',
       position: { x: 850, y: 200 },
       size: { width: 200, height: 150 },
-      dependencies: ['viral-video-creation'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -248,7 +248,7 @@ export const tiktokFarmConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'fact-correction',
@@ -295,7 +295,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Trouvez les 7 différences entre la vraie salle et la version fake filmée.',
       position: { x: 180, y: 280 },
       size: { width: 90, height: 70 },
-      dependencies: ['misinformation-board'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -306,7 +306,7 @@ export const tiktokFarmConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'seven-differences-game',
@@ -352,7 +352,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Déclenchez l\'alarme incendie pour évacuer les gens de la salle 2 et permettre le sabotage.',
       position: { x: 1250, y: 130 },
       size: { width: 80, height: 60 },
-      dependencies: ['seven-differences'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'crossRoom',
@@ -374,7 +374,7 @@ export const tiktokFarmConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'fire-alarm-activation',

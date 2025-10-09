@@ -62,7 +62,7 @@ export const fakeScenesConfig: RoomConfig = {
       description: 'Le fond vert utilisé pour les faux paysages. Plusieurs options de sabotage sont disponibles.',
       position: { x: 350, y: 250 },
       size: { width: 120, height: 200 },
-      dependencies: [],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -142,7 +142,7 @@ export const fakeScenesConfig: RoomConfig = {
       description: 'Le panneau de contrôle des éclairages du studio. Manipulez les couleurs pour ruiner leurs prises.',
       position: { x: 750, y: 130 },
       size: { width: 100, height: 80 },
-      dependencies: ['green-screen-sabotage'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -153,7 +153,7 @@ export const fakeScenesConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'color-lighting-game',
@@ -214,7 +214,7 @@ export const fakeScenesConfig: RoomConfig = {
       description: 'Station pour injecter des memes brainrot dans leurs TikToks en cours de production.',
       position: { x: 1100, y: 480 },
       size: { width: 150, height: 100 },
-      dependencies: ['lighting-control-panel'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'clue',
@@ -225,7 +225,7 @@ export const fakeScenesConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'meme-selection',
@@ -274,7 +274,7 @@ export const fakeScenesConfig: RoomConfig = {
       description: 'L\'écran qui permet de voir les différences entre la vraie salle et la version fake (pour la salle 1).',
       position: { x: 1250, y: 220 },
       size: { width: 120, height: 180 },
-      dependencies: ['meme-injection'],
+      dependencies: [], // All puzzles unlocked from start
       rewards: [
         {
           type: 'crossRoom',
@@ -296,7 +296,7 @@ export const fakeScenesConfig: RoomConfig = {
           }
         }
       ],
-      isUnlocked: false,
+      isUnlocked: true,
       isSolved: false,
       puzzle: {
         id: 'scene-analysis',
