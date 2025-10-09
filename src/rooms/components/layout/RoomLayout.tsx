@@ -9,6 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, CheckCircle2, Zap, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { WaitingModal } from '@/components/rooms/WaitingModal';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RoomLayoutProps {
   onElementInteract: (elementId: string, interactionType: InteractionType) => void;
@@ -42,6 +45,9 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const [completedPuzzles, setCompletedPuzzles] = useState<string[]>([]);
   const [showCodeReveal, setShowCodeReveal] = useState(false);
   const [roomCode, setRoomCode] = useState<string>('');
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [playersStatus, setPlayersStatus] = useState<Array<{id: string, name: string, completed: boolean}>>([]);
+  const [playerId] = useState(sessionStorage.getItem("playerId") || "");
 
   // Enhanced audio initialization with retry mechanism
   useEffect(() => {
@@ -120,7 +126,78 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
     return true; // All puzzles can be done in any order
   };
 
-  const handlePuzzleComplete = (puzzleId: string, solution: any) => {
+  // Realtime subscription to track all players' completion
+  useEffect(() => {
+    if (!lobbyId) return;
+
+    let channel: RealtimeChannel;
+
+    const setupRealtimeSubscription = async () => {
+      // Fetch initial lobby state
+      const { data: lobbyData } = await supabase
+        .from('lobbies')
+        .select('players, player_assignments')
+        .eq('id', lobbyId)
+        .single();
+
+      if (lobbyData) {
+        const assignments = (lobbyData.player_assignments as any) || {};
+        const players = (lobbyData.players as any[]) || [];
+        
+        const status = players.map(player => ({
+          id: player.id,
+          name: player.name,
+          completed: assignments[player.id]?.completed || false
+        }));
+        
+        setPlayersStatus(status);
+      }
+
+      // Subscribe to changes
+      channel = supabase
+        .channel(`lobby-completion-${lobbyId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'lobbies',
+            filter: `id=eq.${lobbyId}`,
+          },
+          (payload) => {
+            const newData = payload.new as any;
+            const assignments = newData.player_assignments || {};
+            const players = newData.players || [];
+            
+            const status = players.map((player: any) => ({
+              id: player.id,
+              name: player.name,
+              completed: assignments[player.id]?.completed || false
+            }));
+            
+            setPlayersStatus(status);
+
+            // Check if all players completed
+            const allCompleted = status.every((p: any) => p.completed);
+            if (allCompleted && status.length > 0) {
+              toast.success('🚀 Toute l\'équipe est prête !');
+              setTimeout(() => {
+                navigate(`/game/${lobbyId}/room/final-destruction`);
+              }, 2000);
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtimeSubscription();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [lobbyId, navigate]);
+
+  const handlePuzzleComplete = async (puzzleId: string, solution: any) => {
     if (solution && !completedPuzzles.includes(puzzleId)) {
       const newCompletedPuzzles = [...completedPuzzles, puzzleId];
       setCompletedPuzzles(newCompletedPuzzles);
@@ -130,22 +207,35 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
         // Generate room code from config or use a default
         const code = config.metadata?.tags?.[0] || `CODE-${config.id.substring(0, 4).toUpperCase()}`;
         setRoomCode(code);
-        setShowCodeReveal(true);
         
         toast.success('🎉 Toutes les missions terminées !', {
           description: 'Vous avez débloqué le code de la salle !'
         });
-        
-        // Navigate to final room after a delay
-        setTimeout(() => {
-          toast.info('Transfert vers la salle de contrôle...', {
-            duration: 2000
-          });
-          setTimeout(() => {
-            // Navigate to final room (room 4)
-            navigate(`/game/${lobbyId}/room/final-destruction`);
-          }, 2000);
-        }, 5000);
+
+        // Update database to mark player as completed
+        if (lobbyId && playerId) {
+          const { data: lobbyData } = await supabase
+            .from('lobbies')
+            .select('player_assignments')
+            .eq('id', lobbyId)
+            .single();
+
+          if (lobbyData) {
+            const currentAssignments = (lobbyData.player_assignments as any) || {};
+            currentAssignments[playerId] = {
+              ...currentAssignments[playerId],
+              completed: true
+            };
+
+            await supabase
+              .from('lobbies')
+              .update({ player_assignments: currentAssignments })
+              .eq('id', lobbyId);
+          }
+        }
+
+        // Show waiting modal
+        setShowWaitingModal(true);
       }
     }
     onPuzzleComplete(puzzleId, solution);
@@ -460,45 +550,12 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
           </div>
         )}
 
-        {/* Code Reveal Modal */}
-        {showCodeReveal && (
-          <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-            <Card className="max-w-2xl w-full border-green-500 cartoon-shadow animate-scale-in">
-              <CardHeader className="bg-gradient-to-r from-green-500/20 to-primary/20 border-b border-green-500/50">
-                <CardTitle className="flex items-center gap-3 neon-cyan font-mono text-3xl justify-center">
-                  <Unlock className="w-10 h-10 text-green-500 animate-pulse" />
-                  Code Débloqué !
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="text-center space-y-6">
-                  <div className="text-6xl mb-6 animate-bounce">🎉</div>
-                  <h3 className="text-2xl font-semibold mb-4 text-green-500">
-                    Félicitations ! Toutes les missions sont terminées !
-                  </h3>
-                  <p className="text-muted-foreground mb-6 text-lg">
-                    Vous avez débloqué le code de cette salle. Notez-le bien, vous en aurez besoin dans la salle de contrôle finale.
-                  </p>
-                  
-                  {/* Code Display */}
-                  <div className="bg-background/50 border-2 border-green-500 rounded-lg p-8 mb-6">
-                    <div className="text-sm text-muted-foreground mb-2 font-mono">CODE DE LA SALLE</div>
-                    <div className="text-6xl font-bold font-mono neon-cyan tracking-widest animate-pulse-glow">
-                      {roomCode}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>Transfert automatique vers la salle de contrôle finale dans quelques secondes...</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Waiting Modal */}
+        <WaitingModal 
+          open={showWaitingModal}
+          players={playersStatus}
+          roomCode={roomCode}
+        />
       </div>
     </div>
   );
