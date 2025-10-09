@@ -107,8 +107,9 @@ const Lobby = () => {
         (payload) => {
           setLobby(payload.new as Lobby);
           
-          // Navigate based on lobby status
-          if (payload.new.status === "room_selection") {
+          // Navigate based on game state phase
+          const newGameState = payload.new.game_state as any;
+          if (newGameState?.phase === "room_selection") {
             setMusicTransitioning(true);
             setTimeout(() => {
               playMusic('roomSelection');
@@ -182,13 +183,16 @@ const Lobby = () => {
       return;
     }
 
-    // Update lobby status to trigger navigation for all players
+    // Update game state to trigger navigation for all players
     const { error } = await supabase
       .from("lobbies")
-      .update({ status: "room_selection" })
+      .update({ 
+        game_state: { phase: "room_selection" }
+      })
       .eq("id", lobby.id);
 
     if (error) {
+      console.error("Error starting game:", error);
       toast({
         title: "Erreur",
         description: "Impossible de démarrer la partie",
