@@ -107,8 +107,16 @@ const Lobby = () => {
         (payload) => {
           setLobby(payload.new as Lobby);
           
-          // If game has started, navigate to game page
-          if (payload.new.status === "playing") {
+          // Navigate based on lobby status
+          if (payload.new.status === "room_selection") {
+            setMusicTransitioning(true);
+            setTimeout(() => {
+              playMusic('roomSelection');
+            }, 300);
+            setTimeout(() => {
+              navigate(`/room-selection/${lobbyId}`);
+            }, 800);
+          } else if (payload.new.status === "playing") {
             navigate(`/game/${lobbyId}`);
           }
         }
@@ -174,6 +182,21 @@ const Lobby = () => {
       return;
     }
 
+    // Update lobby status to trigger navigation for all players
+    const { error } = await supabase
+      .from("lobbies")
+      .update({ status: "room_selection" })
+      .eq("id", lobby.id);
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de démarrer la partie",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Add cool music transition before navigation
     setMusicTransitioning(true);
     
@@ -181,11 +204,6 @@ const Lobby = () => {
     setTimeout(() => {
       playMusic('roomSelection');
     }, 300);
-
-    // Navigate to room selection with delay for music transition
-    setTimeout(() => {
-      navigate(`/room-selection/${lobby.id}`);
-    }, 800);
   };
 
   if (isLoading) {
