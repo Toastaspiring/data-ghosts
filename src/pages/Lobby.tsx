@@ -105,11 +105,15 @@ const Lobby = () => {
           filter: `id=eq.${lobbyId}`,
         },
         (payload) => {
+          console.log("🔔 Lobby update received:", payload.new);
           setLobby(payload.new as Lobby);
           
           // Navigate based on game state phase
           const newGameState = payload.new.game_state as any;
+          console.log("🎮 Game state:", newGameState);
+          
           if (newGameState?.phase === "room_selection") {
+            console.log("✅ Navigating to room selection");
             setMusicTransitioning(true);
             setTimeout(() => {
               playMusic('roomSelection');
@@ -118,6 +122,7 @@ const Lobby = () => {
               navigate(`/room-selection/${lobbyId}`);
             }, 800);
           } else if (payload.new.status === "playing") {
+            console.log("✅ Navigating to game");
             navigate(`/game/${lobbyId}`);
           }
         }
