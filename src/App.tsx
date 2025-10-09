@@ -13,21 +13,33 @@ import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import { audioManager } from "./lib/audioManager";
+import { GlobalAudioVisualizer } from "./components/GlobalAudioVisualizer";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    const handleFirstInteraction = () => {
+    // Immediately try to unlock audio when app loads
+    console.log("🚀 App mounted, attempting immediate audio unlock...");
+    audioManager.unlockAudio();
+    
+    // Set up additional interaction listeners as fallback
+    const handleInteraction = (event: Event) => {
+      console.log(`🎯 App-level interaction: ${event.type}`);
       audioManager.unlockAudio();
     };
 
-    window.addEventListener("click", handleFirstInteraction, { once: true });
-    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+    // Listen to various interaction events
+    const events = ['click', 'keydown', 'touchstart', 'mousedown'];
+    events.forEach(event => {
+      window.addEventListener(event, handleInteraction, { once: true, passive: true });
+    });
 
+    // Cleanup function
     return () => {
-      window.removeEventListener("click", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
+      events.forEach(event => {
+        window.removeEventListener(event, handleInteraction);
+      });
     };
   }, []);
 
@@ -37,17 +49,19 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/create-lobby" element={<CreateLobby />} />
-            <Route path="/join-lobby" element={<JoinLobby />} />
-            <Route path="/lobby/:lobbyId" element={<Lobby />} />
-            <Route path="/room-selection/:lobbyId" element={<RoomSelection />} />
-            <Route path="/game/:lobbyId" element={<Game />} />
-            <Route path="/leaderboard/:lobbyId" element={<Leaderboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <GlobalAudioVisualizer>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/create-lobby" element={<CreateLobby />} />
+              <Route path="/join-lobby" element={<JoinLobby />} />
+              <Route path="/lobby/:lobbyId" element={<Lobby />} />
+              <Route path="/room-selection/:lobbyId" element={<RoomSelection />} />
+              <Route path="/game/:lobbyId" element={<Game />} />
+              <Route path="/leaderboard/:lobbyId" element={<Leaderboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </GlobalAudioVisualizer>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

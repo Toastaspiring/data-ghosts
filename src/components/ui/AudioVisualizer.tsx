@@ -29,34 +29,34 @@ export const AudioVisualizer = ({
   const [isConnected, setIsConnected] = useState(false);
   const { isAudioUnlocked } = useAudioManager();
 
-  // Connect to the background music audio when audio is unlocked
+  // Connect to the background music audio - try regardless of unlock state
   useEffect(() => {
-    if (!isAudioUnlocked) {
-      console.log("🔒 Audio locked, cleaning up visualizer");
-      setIsConnected(false);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      analyserRef.current = null;
-      lastMusicRef.current = null;
-      initAttempted.current = false;
-      return;
-    }
+    // Always attempt connection on mount, don't wait for unlock state
+    console.log("� AudioVisualizer effect triggered, attempting connection...");
+    initAttempted.current = true;
+    
+    const timer = setTimeout(() => {
+      scanForPlayingAudio();
+    }, 200); // Shorter delay
 
-    // If audio just became unlocked and we haven't attempted connection
-    if (!initAttempted.current) {
-      console.log("🔓 Audio just unlocked, attempting connection");
-      initAttempted.current = true;
-      
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []); // Remove dependency on isAudioUnlocked
+
+  // Also try when unlock state changes (as backup)
+  useEffect(() => {
+    if (isAudioUnlocked && !isConnected) {
+      console.log("🔓 Audio state changed to unlocked, attempting connection...");
       const timer = setTimeout(() => {
         scanForPlayingAudio();
-      }, 500);
+      }, 100);
 
       return () => {
         clearTimeout(timer);
       };
     }
-  }, [isAudioUnlocked]);
+  }, [isAudioUnlocked, isConnected]);
 
   // Force fresh initialization on mount - scan for any playing music
   useEffect(() => {
@@ -94,6 +94,21 @@ export const AudioVisualizer = ({
     console.log("🔓 Audio unlocked:", isUnlocked);
     console.log("🎧 Audio context state:", audioContext?.state);
     
+    // Try to unlock if not unlocked yet - be more aggressive
+    if (!isUnlocked) {
+      console.log("❌ Audio not unlocked yet, attempting to unlock...");
+      try {
+        audioManager.unlockAudio();
+        console.log("🔓 Called audio unlock, retrying scan in 300ms...");
+        setTimeout(scanForPlayingAudio, 300);
+      } catch (error) {
+        console.log("❌ Failed to unlock audio:", error);
+        // Keep trying every second
+        setTimeout(scanForPlayingAudio, 1000);
+      }
+      return;
+    }
+    
     // Check if audio context is suspended (happens when navigating away)
     if (audioContext && audioContext.state === 'suspended') {
       console.log("⏸️ Audio context is suspended, attempting to resume...");
@@ -103,20 +118,9 @@ export const AudioVisualizer = ({
         setTimeout(scanForPlayingAudio, 200);
       }).catch(error => {
         console.log("❌ Failed to resume audio context:", error);
+        // Keep trying
+        setTimeout(scanForPlayingAudio, 1000);
       });
-      return;
-    }
-    
-    if (!isUnlocked) {
-      console.log("❌ Audio not unlocked yet, attempting to unlock...");
-      // Try to unlock audio by calling the unlock method
-      try {
-        audioManager.unlockAudio();
-        console.log("🔓 Called audio unlock, retrying scan in 500ms...");
-        setTimeout(scanForPlayingAudio, 500);
-      } catch (error) {
-        console.log("❌ Failed to unlock audio:", error);
-      }
       return;
     }
 
@@ -135,12 +139,19 @@ export const AudioVisualizer = ({
     if (backgroundMusic && !backgroundMusic.paused && audioContext) {
       console.log("✅ Found playing background music, attempting connection");
       connectToAudio();
+    } else if (backgroundMusic && audioContext && mediaSource) {
+      // Even if music is paused, if we have all components, try to connect
+      console.log("🎵 Found background music (may be paused), but have all components - attempting connection");
+      connectToAudio();
     } else {
       console.log("⏳ No playing audio found, will retry when audio becomes available");
       
-      // Retry after a delay if we have audio context but no music yet
-      if (audioContext && !backgroundMusic) {
-        console.log("🔄 Have audio context but no music, retrying in 1 second...");
+      // More aggressive retry strategy
+      if (audioContext) {
+        console.log("🔄 Have audio context, retrying in 500ms...");
+        setTimeout(scanForPlayingAudio, 500);
+      } else {
+        console.log("🔄 No audio context yet, retrying in 1 second...");
         setTimeout(scanForPlayingAudio, 1000);
       }
     }
@@ -148,20 +159,20 @@ export const AudioVisualizer = ({
 
   // Monitor for background music changes and reconnect if needed
   useEffect(() => {
-    if (!isAudioUnlocked) return;
-
+    // Don't depend on isAudioUnlocked state, always monitor
     const checkMusicChange = setInterval(() => {
       const currentMusic = audioManager.getBackgroundMusic();
+      const isUnlocked = audioManager.getIsUnlocked();
       
       // If we have music but aren't connected, try to connect
-      if (currentMusic && !isConnected) {
+      if (currentMusic && !isConnected && isUnlocked) {
         console.log("Found background music, attempting to connect");
         connectToAudio();
         return;
       }
       
       // If music changed, reconnect
-      if (currentMusic !== lastMusicRef.current && currentMusic) {
+      if (currentMusic !== lastMusicRef.current && currentMusic && isUnlocked) {
         console.log("Background music changed, reconnecting visualizer");
         lastMusicRef.current = currentMusic;
         setIsConnected(false);
@@ -173,10 +184,16 @@ export const AudioVisualizer = ({
         // Reconnect after a short delay
         setTimeout(connectToAudio, 300);
       }
-    }, 1000);
+      
+      // If not unlocked, keep trying to unlock
+      if (!isUnlocked && currentMusic) {
+        console.log("🔄 Music available but audio not unlocked, attempting unlock...");
+        audioManager.unlockAudio();
+      }
+    }, 500); // Check more frequently
 
     return () => clearInterval(checkMusicChange);
-  }, [isAudioUnlocked, isConnected]);
+  }, [isConnected]); // Only depend on isConnected
 
   // Cleanup on unmount
   useEffect(() => {
@@ -337,10 +354,11 @@ export const AudioVisualizer = ({
     };
   }, []);
 
-  // Don't render if audio is not unlocked
-  if (!isAudioUnlocked) {
-    return null;
-  }
+  // Don't wait for unlock state - always try to render and connect
+  // The visualizer will show "Connecting..." until audio is available
+  // if (!isAudioUnlocked) {
+  //   return null;
+  // }
 
   // Calculate canvas dimensions
   let canvasWidth, canvasHeight;

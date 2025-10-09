@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAudioManager } from "@/hooks/useAudioManager";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Users, Check, Lock, Play } from "lucide-react";
+import { MapPin, Users, Check, Play, Volume2 } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface Player {
@@ -33,24 +34,24 @@ interface Room {
 const rooms: Room[] = [
   {
     number: 1,
-    name: "Bali",
-    description: "Infiltrer les systèmes de promotion des récifs coralliens",
-    threat: "70% des récifs endommagés",
-    color: "from-primary to-secondary",
+    name: "La Ferme TikTok - Bali",
+    description: "Sabotez la production de TikToks promotionnels pour les récifs coralliens de Bali",
+    threat: "Désinformation touristique massive",
+    color: "from-pink-500 to-cyan-400",
   },
   {
     number: 2,
-    name: "Santorin",
-    description: "Déchiffrer les codes de viralité des falaises",
-    threat: "Capacité dépassée de 300%",
-    color: "from-secondary to-accent",
+    name: "Les Scènes Fake - Santorin", 
+    description: "Perturbez les faux décors utilisés pour créer des TikToks trompeurs de Santorin",
+    threat: "Manipulation visuelle des falaises",
+    color: "from-green-500 to-emerald-400",
   },
   {
     number: 3,
-    name: "Machu Picchu",
-    description: "Infiltrer le système de géolocalisation",
-    threat: "5000 vs 2500 visiteurs/jour",
-    color: "from-accent to-destructive",
+    name: "Salle des Monteurs - Machu Picchu",
+    description: "Corrompez le montage des TikToks du Machu Picchu pour révéler la surpopulation",
+    threat: "Dissimulation de la dégradation",
+    color: "from-purple-500 to-violet-400",
   },
 ];
 
@@ -58,12 +59,32 @@ const RoomSelection = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playMusic, isAudioUnlocked } = useAudioManager();
   const [lobby, setLobby] = useState<Lobby | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
   const [dragOverRoom, setDragOverRoom] = useState<number | null>(null);
+  const [musicTransitioning, setMusicTransitioning] = useState(false);
+
+  // Initialize room selection music
+  useEffect(() => {
+    const initializeRoomSelectionMusic = async () => {
+      setMusicTransitioning(true);
+      
+      setTimeout(() => {
+        if (isAudioUnlocked) {
+          playMusic('roomSelection');
+        }
+        setMusicTransitioning(false);
+      }, 400);
+    };
+
+    if (!isLoading) {
+      initializeRoomSelectionMusic();
+    }
+  }, [isLoading, playMusic, isAudioUnlocked]);
 
   useEffect(() => {
     if (!lobbyId || !playerId) {
@@ -135,10 +156,30 @@ const RoomSelection = () => {
     };
   }, [lobbyId, playerId, navigate, toast]);
 
-  const handleRoomSelect = async (roomNumber: number, targetPlayerId: string) => {
+  const handleRoomSelect = async (roomNumber: number | null, targetPlayerId: string) => {
     if (!lobby) return;
 
     const currentAssignments = lobby.player_assignments || {};
+    
+    // If roomNumber is null, we're unassigning the player
+    if (roomNumber === null) {
+      const updatedAssignments = { ...currentAssignments };
+      delete updatedAssignments[targetPlayerId];
+      
+      const { error } = await supabase
+        .from("lobbies")
+        .update({ player_assignments: updatedAssignments })
+        .eq("id", lobby.id);
+
+      if (error) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de désassigner le joueur",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
     
     // Check if room is already taken by someone else
     const roomOccupantId = Object.keys(currentAssignments).find(
@@ -147,7 +188,7 @@ const RoomSelection = () => {
     if (roomOccupantId && roomOccupantId !== targetPlayerId) {
       toast({
         title: "Salle occupée",
-        description: "Cette salle a déjà été choisie par un autre hacker",
+        description: "Cette salle a déjà été choisie par un autre agent",
         variant: "destructive",
       });
       return;
@@ -238,6 +279,14 @@ const RoomSelection = () => {
       return;
     }
 
+    // Add music transition effect before starting game
+    setMusicTransitioning(true);
+    
+    // Start game music transition
+    setTimeout(() => {
+      playMusic('game');
+    }, 300);
+
     const { error } = await supabase
       .from("lobbies")
       .update({ 
@@ -252,6 +301,7 @@ const RoomSelection = () => {
         description: "Impossible de démarrer la partie",
         variant: "destructive",
       });
+      setMusicTransitioning(false);
     }
   };
 
@@ -288,6 +338,17 @@ const RoomSelection = () => {
       {/* Animated Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
       
+      {/* Music Transition Visual Effect */}
+      {musicTransitioning && (
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          <div className="absolute top-8 right-8 flex items-center gap-3 bg-secondary/20 border-2 border-secondary px-4 py-2 rounded-lg animate-pulse-glow">
+            <Volume2 className="w-5 h-5 text-secondary animate-pulse" />
+            <span className="text-sm font-mono text-secondary">Mission briefing...</span>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 via-accent/5 to-primary/5 animate-pulse" />
+        </div>
+      )}
+      
       <div className="container mx-auto max-w-6xl py-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
@@ -297,18 +358,40 @@ const RoomSelection = () => {
           </div>
           
           <h1 className="text-5xl font-bold mb-4 neon-cyan font-mono">
-            CHOISISSEZ VOTRE CIBLE
+            CHOISISSEZ VOTRE MISSION
           </h1>
           <p className="text-xl text-muted-foreground font-mono">
-            Chaque hacker doit infiltrer une destination différente
+            Chaque agent doit infiltrer une salle différente pour détruire Insta-Vibe
           </p>
         </div>
 
         {/* Unassigned Players Pool */}
-        <div className="bg-card border-2 border-primary/30 rounded-lg p-6 mb-8">
+        <div 
+          className="bg-card border-2 border-primary/30 rounded-lg p-6 mb-8 transition-all"
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            setDragOverRoom(-1); // Use -1 to indicate unassigned area
+          }}
+          onDragLeave={() => setDragOverRoom(null)}
+          onDrop={async (e) => {
+            e.preventDefault();
+            setDragOverRoom(null);
+            
+            if (!draggedPlayerId || draggedPlayerId !== playerId) return;
+            
+            // Unassign the player by setting their room to null
+            await handleRoomSelect(null, draggedPlayerId);
+            setDraggedPlayerId(null);
+          }}
+          style={{
+            borderColor: dragOverRoom === -1 ? 'var(--primary)' : undefined,
+            backgroundColor: dragOverRoom === -1 ? 'rgba(var(--primary-rgb), 0.1)' : undefined,
+          }}
+        >
           <h2 className="text-xl font-bold mb-4 neon-cyan font-mono flex items-center gap-2">
             <Users className="w-5 h-5" />
-            HACKERS EN ATTENTE
+            AGENTS EN ATTENTE
           </h2>
           <div className="flex flex-wrap gap-4">
             {lobby.players
@@ -333,21 +416,21 @@ const RoomSelection = () => {
                       {player.name}
                     </p>
                     <p className="text-xs text-muted-foreground font-mono">
-                      {player.id === playerId ? "Glissez vers une salle" : "En attente"}
+                      {player.id === playerId ? "Glissez vers une mission" : "En attente"}
                     </p>
                   </div>
                 </div>
               ))}
             {lobby.players.filter((player) => !assignments[player.id]).length === 0 && (
               <p className="text-muted-foreground font-mono text-sm">
-                Tous les hackers ont été assignés
+                Tous les agents ont été assignés à une mission
               </p>
             )}
           </div>
         </div>
 
         {/* Rooms Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {rooms.map((room) => {
             const assignedPlayer = getRoomPlayer(room.number);
             const isSelected = selectedRoom === room.number;
@@ -402,7 +485,11 @@ const RoomSelection = () => {
                   }`}
                 >
                   {assignedPlayer ? (
-                    <div className="flex items-center gap-3 p-3">
+                    <div 
+                      className="flex items-center gap-3 p-3 cursor-move"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, assignedPlayer.id)}
+                    >
                       <div className="bg-primary/30 border-2 border-primary w-10 h-10 rounded-lg flex items-center justify-center">
                         <Users className="w-5 h-5 text-primary" />
                       </div>
@@ -417,7 +504,7 @@ const RoomSelection = () => {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground font-mono text-center px-4">
-                      {isDragOver ? "Déposez ici" : "Glissez un hacker ici"}
+                      {isDragOver ? "Déposez ici" : "Glissez un agent ici"}
                     </p>
                   )}
                 </div>

@@ -1,3 +1,6 @@
+/* Import room-specific effects */
+@import './styles/room-effects.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

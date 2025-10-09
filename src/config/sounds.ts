@@ -22,21 +22,21 @@ export const SOUND_EFFECTS = {
 export const BACKGROUND_MUSIC = {
   // Page-specific music
   landing: "/sounds/landing-cyberpunk.mp3",
-  lobby: "/sounds/lobby-ambient.mp3",
-  roomSelection: "/sounds/room-selection-tense.mp3",
-  game: "/sounds/game-intense.mp3",
-  leaderboard: "/sounds/leaderboard-victory.mp3",
+  lobby: "/sounds/lobby-tech-house.mp3", // Cool tech-house beat for lobby waiting
+  roomSelection: "/sounds/mission-briefing.mp3", // Tension building for room selection
+  game: "/sounds/loop-cyber.wav", // Use existing loop-cyber for game music
+  leaderboard: "/sounds/victory-celebration.mp3", // Triumphant music for results
 } as const;
 
 // Audio Settings
 export const AUDIO_CONFIG = {
   // Volume levels (0.0 to 1.0)
   sfxVolume: 0.5,
-  musicVolume: 0.3,
+  musicVolume: 0.4, // Slightly higher volume for better lobby experience
   
-  // Fade durations (in ms)
-  musicFadeIn: 1000,
-  musicFadeOut: 800,
+  // Fade durations (in ms) - Enhanced for cooler transitions
+  musicFadeIn: 1200, // Longer fade in for smoother transitions
+  musicFadeOut: 900, // Slightly longer fade out for professional feel
   
   // Music loop settings
   musicLoop: true,

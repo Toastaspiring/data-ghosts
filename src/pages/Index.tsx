@@ -1,23 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, Target, Zap, Globe, AlertTriangle, Code, Lock, Volume2, VolumeX, Monitor, Smartphone } from "lucide-react";
+import { Shield, Users, Target, Zap, Globe, AlertTriangle, Code, Lock, Monitor, Smartphone } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { useBackgroundMusic } from "@/hooks/useAudio";
 import { AudioButton } from "@/components/ui/AudioButton";
-import { AudioVisualizer } from "@/components/ui/AudioVisualizer";
 import { audioManager } from "@/lib/audioManager";
 import { useAudio } from "@/hooks/useAudio";
+import { useGameStats } from "@/hooks/useGameStats";
 
 const Index = () => {
   const navigate = useNavigate();
   const [typedText, setTypedText] = useState("");
-  const [visualizerKey, setVisualizerKey] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isMusicMuted, setIsMusicMuted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const fullText = "Data Ghosts";
   const { playSound } = useAudio();
   const typingAudioRef = useRef<HTMLAudioElement | null>(null);
+  const { stats } = useGameStats();
 
   // Check if user is on mobile
   useEffect(() => {
@@ -34,13 +32,8 @@ const Index = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Play landing page background music
-  useBackgroundMusic("landing");
-
-  // Force visualizer remount when returning to page
+  // Add audio reactivation handler
   useEffect(() => {
-    setVisualizerKey(prev => prev + 1);
-    
     // Add a click handler to reactivate audio if needed
     const handlePageClick = () => {
       console.log("📱 Page clicked, checking audio state...");
@@ -101,54 +94,6 @@ const Index = () => {
       {/* Scanning Effect - Full Page */}
       <div className="scan-lines fixed inset-0 pointer-events-none z-20" />
       
-      {/* Music Control Button */}
-      <button
-        onClick={() => {
-          if (isMusicMuted) {
-            audioManager.unlockAudio();
-            setIsMusicMuted(false);
-          } else {
-            audioManager.stopMusic();
-            setIsMusicMuted(true);
-          }
-        }}
-        className="fixed top-4 right-4 z-50 bg-background/80 border border-border rounded-lg p-3 hover:bg-background transition-all"
-      >
-        {isMusicMuted ? (
-          <VolumeX className="w-5 h-5 text-muted-foreground" />
-        ) : (
-          <Volume2 className="w-5 h-5 text-primary" />
-        )}
-      </button>
-      
-      {/* Left Sidebar Visualizer - Full Height */}
-      <div className="fixed left-0 top-0 h-screen w-32 flex items-center justify-center z-30">
-        <AudioVisualizer 
-          key={`left-${visualizerKey}`}
-          barCount={80}
-          barHeight={120}
-          barWidth={3}
-          barGap={0}
-          fullHeight={true}
-          mirrored={true}
-          className="opacity-60 transform rotate-90"
-        />
-      </div>
-
-      {/* Right Sidebar Visualizer - Full Height */}
-      <div className="fixed right-0 top-0 h-screen w-32 flex items-center justify-center z-30">
-        <AudioVisualizer 
-          key={`right-${visualizerKey}`}
-          barCount={80}
-          barHeight={120}
-          barWidth={3}
-          barGap={0}
-          fullHeight={true}
-          mirrored={true}
-          className="opacity-60 transform -rotate-90"
-        />
-      </div>
-
       {/* Animated Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
       
@@ -435,18 +380,33 @@ const Index = () => {
                   <div className="bg-background/50 border border-border rounded-lg p-4 max-w-2xl mx-auto">
                     <div className="flex items-center justify-between text-sm font-mono">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-green-400">SERVEURS EN LIGNE</span>
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${
+                          stats.isLoading ? 'bg-yellow-500' : stats.error ? 'bg-red-500' : 'bg-green-500'
+                        }`} />
+                        <span className={`${
+                          stats.isLoading ? 'text-yellow-400' : stats.error ? 'text-red-400' : 'text-green-400'
+                        }`}>
+                          {stats.isLoading ? 'CONNEXION...' : stats.error ? 'SERVEURS HORS LIGNE' : 'SERVEURS EN LIGNE'}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">AGENTS ACTIFS:</span>
-                        <span className="text-primary font-bold">247</span>
+                        <span className="text-primary font-bold">
+                          {stats.isLoading ? '...' : stats.totalPlayers}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">MISSIONS:</span>
-                        <span className="text-accent font-bold">12</span>
+                        <span className="text-accent font-bold">
+                          {stats.isLoading ? '...' : stats.activeGames}
+                        </span>
                       </div>
                     </div>
+                    {stats.error && (
+                      <div className="mt-2 text-xs text-red-400 text-center">
+                        Erreur de connexion à la base de données
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

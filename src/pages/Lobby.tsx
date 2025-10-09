@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAudioManager } from "@/hooks/useAudioManager";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Crown, User, CheckCircle, Circle, Play } from "lucide-react";
+import { Copy, Crown, User, CheckCircle, Circle, Play, Volume2 } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface Player {
@@ -27,9 +28,39 @@ const Lobby = () => {
   const { lobbyId } = useParams<{ lobbyId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { playMusic, isAudioUnlocked } = useAudioManager();
   const [lobby, setLobby] = useState<Lobby | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
+  const [musicTransitioning, setMusicTransitioning] = useState(false);
+
+  // Initialize lobby music with cool transition effect
+  useEffect(() => {
+    const initializeLobbyMusic = async () => {
+      setMusicTransitioning(true);
+      
+      // Add visual feedback for music transition
+      const musicTransition = () => {
+        setTimeout(() => {
+          playMusic('lobby');
+          setMusicTransitioning(false);
+        }, 600); // Delay to sync with fade transition
+      };
+
+      if (isAudioUnlocked) {
+        musicTransition();
+      } else {
+        // If audio isn't unlocked yet, still trigger the visual effect
+        setTimeout(() => {
+          setMusicTransitioning(false);
+        }, 800);
+      }
+    };
+
+    if (!isLoading) {
+      initializeLobbyMusic();
+    }
+  }, [isLoading, playMusic, isAudioUnlocked]);
 
   useEffect(() => {
     if (!lobbyId || !playerId) {
@@ -143,8 +174,18 @@ const Lobby = () => {
       return;
     }
 
-    // Navigate to room selection instead of starting game directly
-    navigate(`/room-selection/${lobby.id}`);
+    // Add cool music transition before navigation
+    setMusicTransitioning(true);
+    
+    // Play room selection music with transition effect
+    setTimeout(() => {
+      playMusic('roomSelection');
+    }, 300);
+
+    // Navigate to room selection with delay for music transition
+    setTimeout(() => {
+      navigate(`/room-selection/${lobby.id}`);
+    }, 800);
   };
 
   if (isLoading) {
@@ -168,6 +209,17 @@ const Lobby = () => {
     <div className="min-h-screen bg-background p-4 relative overflow-hidden">
       {/* Animated Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0ff_1px,transparent_1px),linear-gradient(to_bottom,#0ff_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)] opacity-10" />
+      
+      {/* Music Transition Visual Effect */}
+      {musicTransitioning && (
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          <div className="absolute top-8 right-8 flex items-center gap-3 bg-primary/20 border-2 border-primary px-4 py-2 rounded-lg animate-pulse-glow">
+            <Volume2 className="w-5 h-5 text-primary animate-pulse" />
+            <span className="text-sm font-mono text-primary">Synchronisation audio...</span>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 animate-pulse" />
+        </div>
+      )}
       
       <div className="container mx-auto max-w-4xl py-8 relative z-10">
         {/* Lobby Header */}

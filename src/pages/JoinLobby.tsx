@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Lock, Shield } from "lucide-react";
-import { useBackgroundMusic } from "@/hooks/useAudio";
 import { AudioButton } from "@/components/ui/AudioButton";
 
 const JoinLobby = () => {
@@ -15,9 +14,6 @@ const JoinLobby = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Play lobby background music
-  useBackgroundMusic("lobby");
 
   const handleJoinLobby = async () => {
     if (!lobbyCode.trim() || !playerName.trim()) {

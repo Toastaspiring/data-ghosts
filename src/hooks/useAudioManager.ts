@@ -16,5 +16,11 @@ export const useAudioManager = () => {
     };
   }, []);
 
-  return { isAudioUnlocked };
+  return { 
+    isAudioUnlocked,
+    playMusic: audioManager.playMusic.bind(audioManager),
+    playMusicFromUrl: audioManager.playMusicFromUrl.bind(audioManager),
+    stopMusic: audioManager.stopMusic.bind(audioManager),
+    unlockAudio: audioManager.unlockAudio.bind(audioManager)
+  };
 };

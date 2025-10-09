@@ -170,6 +170,76 @@ class AudioManager {
     }
   }
 
+  public playMusicFromUrl(musicUrl: string) {
+    console.log("🎵 playMusicFromUrl called with:", musicUrl, "unlocked:", this.isUnlocked);
+    
+    if (!this.isUnlocked) {
+      console.log("🔒 Audio not unlocked, cannot play direct URL music");
+      this.unlockAudio(); // Try to unlock audio
+      if (!this.isUnlocked) {
+        return; // Still not unlocked, give up
+      }
+    }
+
+    // Resume audio context if it's suspended
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      console.log("⏸️ Audio context suspended, resuming...");
+      this.audioContext.resume().then(() => {
+        console.log("▶️ Audio context resumed, continuing with music");
+        this.playMusicFromUrl(musicUrl); // Retry after resuming
+      });
+      return;
+    }
+
+    // Check if this music is already playing
+    if (this.backgroundMusic && this.backgroundMusic.src.includes(musicUrl)) {
+      console.log("🎶 Music already playing:", musicUrl);
+      return;
+    }
+
+    // Fade out current music and start new one
+    if (this.backgroundMusic) {
+      console.log(`🔄 Fading out current music and starting new music: ${musicUrl}`);
+      this.fadeOut(this.backgroundMusic, AUDIO_CONFIG.musicFadeOut, () => {
+        this.backgroundMusic?.pause();
+        this.startMusicFromUrl(musicUrl);
+      });
+    } else {
+      console.log("🎵 Starting new music:", musicUrl);
+      this.startMusicFromUrl(musicUrl);
+    }
+  }
+
+  private startMusicFromUrl(musicUrl: string) {
+    console.log("🎼 Starting music from URL:", musicUrl);
+    
+    this.backgroundMusic = new Audio(musicUrl);
+    this.backgroundMusic.loop = AUDIO_CONFIG.musicLoop;
+    this.backgroundMusic.volume = 0;
+
+    // Create media source for Web Audio API if we have an audio context
+    if (this.audioContext) {
+      try {
+        console.log("🎧 Creating media source for Web Audio API");
+        this.mediaSource = this.audioContext.createMediaElementSource(this.backgroundMusic);
+        this.mediaSource.connect(this.audioContext.destination);
+        console.log("✅ Media source created and connected");
+      } catch (error) {
+        console.warn("❌ Could not create media source:", error);
+      }
+    } else {
+      console.warn("⚠️ No audio context available for media source");
+    }
+
+    console.log("▶️ Attempting to play music...");
+    this.backgroundMusic.play().then(() => {
+      console.log("🎉 Music started successfully, fading in...");
+      this.fadeIn(this.backgroundMusic!, AUDIO_CONFIG.musicFadeIn, AUDIO_CONFIG.musicVolume);
+    }).catch(error => {
+      console.error("💥 Error playing background music:", error);
+    });
+  }
+
   private fadeIn(audio: HTMLAudioElement, duration: number, targetVolume: number) {
     let volume = 0;
     audio.volume = volume;
