@@ -46,7 +46,7 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const [showCodeReveal, setShowCodeReveal] = useState(false);
   const [roomCode, setRoomCode] = useState<string>('');
   const [showWaitingModal, setShowWaitingModal] = useState(false);
-  const [playersStatus, setPlayersStatus] = useState<Array<{id: string, name: string, completed: boolean}>>([]);
+  const [playersStatus, setPlayersStatus] = useState<Array<{id: string, name: string, completed: boolean, ready?: boolean}>>([]);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
 
   // Enhanced audio initialization with retry mechanism
@@ -136,18 +136,20 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
       // Fetch initial lobby state
       const { data: lobbyData } = await supabase
         .from('lobbies')
-        .select('players, player_assignments')
+        .select('players, game_state')
         .eq('id', lobbyId)
         .single();
 
       if (lobbyData) {
-        const assignments = (lobbyData.player_assignments as any) || {};
+        const gameState = (lobbyData as any).game_state || {};
+        const completedPlayers = gameState.completed_players || {};
         const players = (lobbyData.players as any[]) || [];
         
         const status = players.map(player => ({
           id: player.id,
           name: player.name,
-          completed: assignments[player.id]?.completed || false
+          completed: completedPlayers[player.id]?.completed || false,
+          ready: completedPlayers[player.id]?.ready || false
         }));
         
         setPlayersStatus(status);
@@ -166,23 +168,39 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
           },
           (payload) => {
             const newData = payload.new as any;
-            const assignments = newData.player_assignments || {};
+            const gameState = newData.game_state || {};
+            const completedPlayers = gameState.completed_players || {};
             const players = newData.players || [];
             
             const status = players.map((player: any) => ({
               id: player.id,
               name: player.name,
-              completed: assignments[player.id]?.completed || false
+              completed: completedPlayers[player.id]?.completed || false,
+              ready: completedPlayers[player.id]?.ready || false
             }));
             
             setPlayersStatus(status);
 
-            // Check if all players completed
+            // Check if all players are ready
             const allCompleted = status.every((p: any) => p.completed);
-            if (allCompleted && status.length > 0) {
+            const allReady = status.every((p: any) => p.ready);
+            if (allCompleted && allReady && status.length > 0) {
               toast.success('🚀 Toute l\'équipe est prête !');
+              
+              // Update player assignments to point to final room
+              const playerAssignments = newData.player_assignments || {};
+              const updatedAssignments: any = {};
+              Object.keys(playerAssignments).forEach(pid => {
+                updatedAssignments[pid] = 5; // final-destruction is room 5
+              });
+
+              supabase
+                .from('lobbies')
+                .update({ player_assignments: updatedAssignments })
+                .eq('id', lobbyId);
+
               setTimeout(() => {
-                navigate(`/game/${lobbyId}/room/final-destruction`);
+                window.location.href = `/game/${lobbyId}`;
               }, 2000);
             }
           }
@@ -216,21 +234,37 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
         if (lobbyId && playerId) {
           const { data: lobbyData } = await supabase
             .from('lobbies')
-            .select('player_assignments')
+            .select('game_state, players')
             .eq('id', lobbyId)
             .single();
 
           if (lobbyData) {
-            const currentAssignments = (lobbyData.player_assignments as any) || {};
-            currentAssignments[playerId] = {
-              ...currentAssignments[playerId],
-              completed: true
+            const gameState = (lobbyData as any).game_state || {};
+            const completedPlayers = gameState.completed_players || {};
+            
+            completedPlayers[playerId] = {
+              completed: true,
+              ready: false,
+              code: code,
+              completedAt: new Date().toISOString()
             };
 
             await supabase
               .from('lobbies')
-              .update({ player_assignments: currentAssignments })
+              .update({ 
+                game_state: { ...gameState, completed_players: completedPlayers }
+              })
               .eq('id', lobbyId);
+
+            // Update local players status
+            const players = (lobbyData.players as any[]) || [];
+            const status = players.map(player => ({
+              id: player.id,
+              name: player.name,
+              completed: completedPlayers[player.id]?.completed || false,
+              ready: completedPlayers[player.id]?.ready || false
+            }));
+            setPlayersStatus(status);
           }
         }
 
@@ -239,6 +273,36 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
       }
     }
     onPuzzleComplete(puzzleId, solution);
+  };
+
+  const handleReady = async () => {
+    if (!lobbyId || !playerId) return;
+
+    const { data: lobbyData } = await supabase
+      .from('lobbies')
+      .select('game_state')
+      .eq('id', lobbyId)
+      .single();
+
+    if (lobbyData) {
+      const gameState = (lobbyData as any).game_state || {};
+      const completedPlayers = gameState.completed_players || {};
+      
+      if (completedPlayers[playerId]) {
+        completedPlayers[playerId].ready = true;
+      }
+
+      await supabase
+        .from('lobbies')
+        .update({
+          game_state: { ...gameState, completed_players: completedPlayers }
+        })
+        .eq('id', lobbyId);
+
+      toast.success('✓ Prêt !', {
+        description: 'En attente des autres joueurs...'
+      });
+    }
   };
 
   return (
@@ -555,6 +619,8 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
           open={showWaitingModal}
           players={playersStatus}
           roomCode={roomCode}
+          currentPlayerId={playerId}
+          onReady={handleReady}
         />
       </div>
     </div>
