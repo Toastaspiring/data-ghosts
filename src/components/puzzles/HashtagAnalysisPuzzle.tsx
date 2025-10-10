@@ -18,17 +18,18 @@ export const HashtagAnalysisPuzzle = ({
   onSolve 
 }: HashtagAnalysisPuzzleProps) => {
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
-  const [revealedTypes, setRevealedTypes] = useState<Set<string>>(new Set());
+  const [submitted, setSubmitted] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const allHashtags = [...trendingHashtags, ...avoidHashtags, ...neutralHashtags];
 
   const toggleHashtag = (hashtag: string) => {
     if (selectedHashtags.includes(hashtag)) {
       setSelectedHashtags(selectedHashtags.filter(h => h !== hashtag));
-    } else if (selectedHashtags.length < 4) {
+    } else if (selectedHashtags.length < trendingHashtags.length) {
       setSelectedHashtags([...selectedHashtags, hashtag]);
-      setRevealedTypes(new Set([...revealedTypes, hashtag]));
     }
+    setShowFeedback(false);
   };
 
   const getHashtagType = (hashtag: string) => {
@@ -39,21 +40,27 @@ export const HashtagAnalysisPuzzle = ({
   
   const getHashtagMetrics = (hashtag: string) => {
     const type = getHashtagType(hashtag);
-    const baseViews = type === "trending" ? 8 : type === "avoid" ? 9 : 4;
-    const baseLikes = type === "trending" ? 500 : type === "avoid" ? 600 : 300;
-    const baseShares = type === "trending" ? 200 : type === "avoid" ? 250 : 100;
+    // Intentionally misleading: avoid hashtags have HIGHER numbers
+    const baseViews = type === "trending" ? 6 : type === "avoid" ? 11 : 3;
+    const baseEngagement = type === "trending" ? 75 : type === "avoid" ? 85 : 45;
+    const growth = type === "trending" ? 120 : type === "avoid" ? 95 : 60;
     
     return {
-      views: `${baseViews + Math.floor(Math.random() * 3)}M`,
-      likes: `${baseLikes + Math.floor(Math.random() * 200)}K`,
-      shares: `${baseShares + Math.floor(Math.random() * 100)}K`
+      views: `${baseViews + Math.floor(Math.random() * 2)}.${Math.floor(Math.random() * 9)}M`,
+      engagement: `${baseEngagement + Math.floor(Math.random() * 10)}%`,
+      growth: `+${growth + Math.floor(Math.random() * 20)}%`
     };
   };
 
   const handleSubmit = () => {
+    setSubmitted(true);
+    setShowFeedback(true);
+    
     const allTrending = selectedHashtags.every(h => trendingHashtags.includes(h));
-    if (allTrending && selectedHashtags.length === trendingHashtags.length) {
-      onSolve();
+    const hasCorrectCount = selectedHashtags.length === trendingHashtags.length;
+    
+    if (allTrending && hasCorrectCount) {
+      setTimeout(onSolve, 1500);
     }
   };
 
@@ -76,6 +83,8 @@ export const HashtagAnalysisPuzzle = ({
         {allHashtags.map((hashtag) => {
           const isSelected = selectedHashtags.includes(hashtag);
           const type = getHashtagType(hashtag);
+          const metrics = getHashtagMetrics(hashtag);
+          const showType = submitted && isSelected;
           
           return (
             <Card
@@ -83,27 +92,64 @@ export const HashtagAnalysisPuzzle = ({
               className={`p-4 cursor-pointer transition-all ${
                 isSelected ? "border-primary border-2 bg-primary/10" : "border-border"
               }`}
-              onClick={() => toggleHashtag(hashtag)}
+              onClick={() => !submitted && toggleHashtag(hashtag)}
             >
-              <div className="text-center space-y-2">
-                <div className="text-2xl font-bold text-primary">{hashtag}</div>
-                {type === "trending" && (
-                  <Badge variant="default" className="gap-1">
-                    <TrendingUp className="w-3 h-3" />
-                    Tendance
-                  </Badge>
-                )}
-                {type === "avoid" && (
-                  <Badge variant="destructive">À Éviter</Badge>
-                )}
-                {type === "neutral" && (
-                  <Badge variant="secondary">Neutre</Badge>
+              <div className="space-y-2">
+                <div className="text-lg font-bold text-primary text-center">{hashtag}</div>
+                
+                {!showType ? (
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex justify-between">
+                      <span>Vues:</span>
+                      <span className="font-semibold">{metrics.views}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Engagement:</span>
+                      <span className="font-semibold">{metrics.engagement}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Croissance:</span>
+                      <span className="font-semibold text-green-500">{metrics.growth}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    {type === "trending" && (
+                      <Badge variant="default" className="gap-1">
+                        <TrendingUp className="w-3 h-3" />
+                        Tendance ✓
+                      </Badge>
+                    )}
+                    {type === "avoid" && (
+                      <Badge variant="destructive">À Éviter ✗</Badge>
+                    )}
+                    {type === "neutral" && (
+                      <Badge variant="secondary">Neutre ✗</Badge>
+                    )}
+                  </div>
                 )}
               </div>
             </Card>
           );
         })}
       </div>
+
+      {showFeedback && (
+        <div className="text-center space-y-2">
+          {selectedHashtags.every(h => trendingHashtags.includes(h)) && 
+           selectedHashtags.length === trendingHashtags.length ? (
+            <p className="text-green-500 font-semibold">
+              ✓ Parfait ! Tous les hashtags tendance identifiés !
+            </p>
+          ) : (
+            <p className="text-destructive font-semibold">
+              ✗ Erreur ! Les hashtags avec les plus gros chiffres ne sont pas toujours les bons.
+              <br/>
+              <span className="text-xs">Astuce: Les vraies tendances ont une croissance régulière, pas explosive.</span>
+            </p>
+          )}
+        </div>
+      )}
 
       <Button
         onClick={handleSubmit}
