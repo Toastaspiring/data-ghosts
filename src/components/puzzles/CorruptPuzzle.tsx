@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { DollarSign, UserX, FileX } from "lucide-react";
+import { DollarSign, UserX, FileX, Check } from "lucide-react";
 
 interface CorruptMethod {
   id: string;

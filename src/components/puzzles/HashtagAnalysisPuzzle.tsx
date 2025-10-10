@@ -18,6 +18,7 @@ export const HashtagAnalysisPuzzle = ({
   onSolve 
 }: HashtagAnalysisPuzzleProps) => {
   const [selectedHashtags, setSelectedHashtags] = useState<string[]>([]);
+  const [revealedTypes, setRevealedTypes] = useState<Set<string>>(new Set());
 
   const allHashtags = [...trendingHashtags, ...avoidHashtags, ...neutralHashtags];
 

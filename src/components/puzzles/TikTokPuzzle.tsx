@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Hash, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface TikTokPuzzleProps {
   originalHashtags: string[];
@@ -9,21 +9,38 @@ interface TikTokPuzzleProps {
 }
 
 export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: TikTokPuzzleProps) => {
-  const [replacedCount, setReplacedCount] = useState(0);
-  const [hashtags, setHashtags] = useState(originalHashtags);
+  const [matches, setMatches] = useState<Record<string, string>>({});
+  const [viralScore, setViralScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState(false);
+  
+  const hashtagData = originalHashtags.map((tag, idx) => ({
+    original: tag,
+    views: Math.floor(Math.random() * 10) + 1,
+    trending: idx < 3
+  }));
 
-  const handleReplace = (index: number) => {
-    if (index < sabotageHashtags.length) {
-      const newHashtags = [...hashtags];
-      newHashtags[index] = sabotageHashtags[index];
-      setHashtags(newHashtags);
-      
-      const newCount = replacedCount + 1;
-      setReplacedCount(newCount);
-      
-      if (newCount === originalHashtags.length) {
-        setTimeout(onSolve, 500);
+  const handleMatch = (original: string, sabotage: string) => {
+    const newMatches = { ...matches, [original]: sabotage };
+    setMatches(newMatches);
+    calculateScore(newMatches);
+    setShowFeedback(false);
+  };
+  
+  const calculateScore = (currentMatches: Record<string, string>) => {
+    let score = 0;
+    Object.entries(currentMatches).forEach(([original, sabotage]) => {
+      const data = hashtagData.find(h => h.original === original);
+      if (data?.trending && sabotageHashtags.includes(sabotage)) {
+        score += 20;
       }
+    });
+    setViralScore(score);
+  };
+  
+  const handleSubmit = () => {
+    setShowFeedback(true);
+    if (viralScore >= 80) {
+      setTimeout(onSolve, 1500);
     }
   };
 
@@ -103,3 +120,4 @@ export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: Ti
       </Button>
     </div>
   );
+};
