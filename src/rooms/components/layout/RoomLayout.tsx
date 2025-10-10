@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, CheckCircle2, Zap, Unlock } from 'lucide-react';
+import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, CheckCircle2, Zap, Unlock, FastForward } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { WaitingModal } from '@/components/rooms/WaitingModal';
@@ -65,6 +65,84 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const [playersStatus, setPlayersStatus] = useState<Array<{id: string, name: string, completed: boolean, ready?: boolean}>>([]);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
   const [isLoadingPuzzles, setIsLoadingPuzzles] = useState(true);
+
+  // Check if current room allows instant validation (rooms 2 and 3)
+  const canInstantValidate = () => {
+    return config.id === 'fake-scenes' || config.id === 'video-editors';
+  };
+
+  // Instant validation function for rooms 2 and 3
+  const handleInstantValidation = async () => {
+    if (!canInstantValidate()) return;
+
+    const uncompletedPuzzles = config.elements.filter(element => 
+      !completedPuzzles.includes(element.id)
+    );
+
+    if (uncompletedPuzzles.length === 0) {
+      toast.success('🎯 Toutes les missions sont déjà terminées !');
+      return;
+    }
+
+    // Complete all remaining puzzles instantly
+    const allPuzzleIds = config.elements.map(element => element.id);
+    setCompletedPuzzles(allPuzzleIds);
+
+    // Generate room code
+    const code = config.metadata?.tags?.[0] || `CODE-${config.id.substring(0, 4).toUpperCase()}`;
+    setRoomCode(code);
+
+    // Save to database
+    if (lobbyId && playerId) {
+      try {
+        // Update completed puzzles
+        const { data: lobbyData } = await supabase
+          .from('lobbies')
+          .select('completed_puzzles, game_state')
+          .eq('id', lobbyId)
+          .single();
+        
+        if (lobbyData) {
+          let allCompletedPuzzles: any = (lobbyData as any).completed_puzzles;
+          if (!allCompletedPuzzles || Array.isArray(allCompletedPuzzles)) {
+            allCompletedPuzzles = {};
+          }
+          allCompletedPuzzles[playerId] = allPuzzleIds;
+          
+          // Update game state to mark player as completed
+          const gameState = (lobbyData as any).game_state || {};
+          const completedPlayers = gameState.completed_players || {};
+          
+          completedPlayers[playerId] = {
+            completed: true,
+            ready: false,
+            code: code,
+            completedAt: new Date().toISOString()
+          };
+
+          await supabase
+            .from('lobbies')
+            .update({ 
+              completed_puzzles: allCompletedPuzzles,
+              game_state: { ...gameState, completed_players: completedPlayers }
+            })
+            .eq('id', lobbyId);
+
+          console.log(`✓ All puzzles instantly completed for player ${playerId}`);
+          
+          toast.success('🚀 Validation Instantanée !', {
+            description: `${uncompletedPuzzles.length} missions terminées instantanément`
+          });
+
+          // Show waiting modal
+          setShowWaitingModal(true);
+        }
+      } catch (error) {
+        console.error('Error during instant validation:', error);
+        toast.error('❌ Erreur lors de la validation instantanée');
+      }
+    }
+  };
 
   // Load completed puzzles from database on mount
   useEffect(() => {
@@ -436,6 +514,23 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
             </div>
             
             <div className="flex items-center gap-4">
+              {/* Instant Validation Button for Rooms 2 & 3 */}
+              {canInstantValidate() && completedPuzzles.length < config.elements.length && (
+                <Card className="border-yellow-500/30 cartoon-shadow">
+                  <CardContent className="p-3">
+                    <Button
+                      onClick={handleInstantValidation}
+                      variant="outline"
+                      size="sm"
+                      className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-400 font-mono"
+                    >
+                      <FastForward className="w-4 h-4 mr-2" />
+                      Valider Tout
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              
               {/* Audio Status Indicator */}
               {config.audio?.background && (
                 <Card className={`border-accent/30 transition-all duration-500 ${audioInitialized ? 'animate-pulse-glow' : ''}`}>

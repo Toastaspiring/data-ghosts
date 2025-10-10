@@ -413,21 +413,24 @@ export const tiktokFarmConfig: RoomConfig = {
       puzzle: {
         id: 'fire-alarm-activation',
         type: 'sequence',
-        difficulty: 2,
-        timeLimit: 180,
+        difficulty: 5, // Increased from 2 to 5 - maximum difficulty
+        timeLimit: 300, // Increased from 180 to 300 seconds (5 minutes)
         component: 'AlarmActivationPuzzle',
         data: {
-          sequence: ['BREAK_GLASS', 'PULL_LEVER', 'CONFIRM_EVACUATION'],
-          safetyWarning: true
+          sequence: ['SECURITY_BYPASS', 'SYSTEM_DIAGNOSTICS', 'SAFETY_PROTOCOL', 'MANUAL_OVERRIDE'],
+          safetyWarning: true,
+          emergencyCode: 'FIRE-7734',
+          requiresExpertise: true
         },
         validation: {
-          type: 'exact',
-          correctAnswer: ['BREAK_GLASS', 'PULL_LEVER', 'CONFIRM_EVACUATION']
+          type: 'custom',
+          correctAnswer: ['SECURITY_BYPASS', 'SYSTEM_DIAGNOSTICS', 'SAFETY_PROTOCOL', 'MANUAL_OVERRIDE']
         },
         hints: [
-          'Suivez la procédure standard d\'urgence.',
-          'Cassez d\'abord la vitre de protection.',
-          'Confirmez l\'évacuation pour déclencher l\'alarme dans la salle 2.'
+          'Le code d\'urgence utilise "FIRE" dans un format numérique spécial.',
+          'Tous les systèmes doivent être opérationnels avant de continuer.',
+          'Connaissances en sécurité incendie requises pour les questions.',
+          'La séquence de câblage est générée aléatoirement - attention aux erreurs!'
         ],
         rewards: []
       }
