@@ -182,16 +182,26 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
       );
     }
 
-    // Map puzzle data to component props
-    const puzzleProps: any = {
-      ...puzzle.data,
-      onSolve: () => {
-        onComplete(puzzle.id, { solved: true });
-        onClose();
-      },
-    };
+  // Map puzzle data to component props with adapter for legacy keys
+  const data = puzzle.data || {};
+  const adaptedProps =
+    componentName === 'FactCheckPuzzle'
+      ? {
+          falseStatements: data.falseStatements ?? data.false_statements ?? [],
+          correctFacts: data.correctFacts ?? data.correct_facts ?? [],
+        }
+      : {};
 
-    return <PuzzleComponent {...puzzleProps} />;
+  const puzzleProps: any = {
+    ...data,
+    ...adaptedProps,
+    onSolve: () => {
+      onComplete(puzzle.id, { solved: true });
+      onClose();
+    },
+  };
+
+  return <PuzzleComponent {...puzzleProps} />;
   };
 
   return (
