@@ -10,11 +10,16 @@ interface FactCheckPuzzleProps {
   onSolve: () => void;
 }
 
-export const FactCheckPuzzle = ({ falseStatements, correctFacts, onSolve }: FactCheckPuzzleProps) => {
+export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSolve }: FactCheckPuzzleProps) => {
   const [selectedMatches, setSelectedMatches] = useState<Record<number, number>>({});
   const [selectedFalse, setSelectedFalse] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+
+  // Safety check
+  if (!falseStatements.length || !correctFacts.length) {
+    return <div className="p-6 text-center text-muted-foreground">Chargement du puzzle...</div>;
+  }
 
   // Create misleading metrics for each correct fact (to make it harder)
   const factMetrics = correctFacts.map((_, idx) => ({
