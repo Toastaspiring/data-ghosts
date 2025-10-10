@@ -41,7 +41,22 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const { playMusicFromUrl, unlockAudio, isAudioUnlocked } = useAudioManager();
   const navigate = useNavigate();
   const { lobbyId } = useParams();
-  const [timeRemaining, setTimeRemaining] = useState(2700); // 45 minutes
+  
+  // Load timer from localStorage or initialize to 45 minutes
+  const getInitialTime = () => {
+    if (!lobbyId) return 2700;
+    
+    const savedData = localStorage.getItem(`game-timer-${lobbyId}`);
+    if (savedData) {
+      const { timeRemaining, timestamp } = JSON.parse(savedData);
+      const elapsed = Math.floor((Date.now() - timestamp) / 1000);
+      const remainingTime = Math.max(0, timeRemaining - elapsed);
+      return remainingTime;
+    }
+    return 2700; // 45 minutes default
+  };
+  
+  const [timeRemaining, setTimeRemaining] = useState(getInitialTime);
   const [audioInitialized, setAudioInitialized] = useState(false);
   const [completedPuzzles, setCompletedPuzzles] = useState<string[]>([]);
   const [showCodeReveal, setShowCodeReveal] = useState(false);
@@ -135,20 +150,29 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
     initializeRoomAudio();
   }, [config.audio?.background, playMusicFromUrl, unlockAudio, isAudioUnlocked, audioInitialized]);
 
-  // Timer countdown
+  // Timer countdown with localStorage persistence
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
+        const newTime = prev <= 0 ? 0 : prev - 1;
+        
+        // Save to localStorage
+        if (lobbyId) {
+          localStorage.setItem(`game-timer-${lobbyId}`, JSON.stringify({
+            timeRemaining: newTime,
+            timestamp: Date.now()
+          }));
         }
-        return prev - 1;
+        
+        if (newTime <= 0) {
+          clearInterval(timer);
+        }
+        return newTime;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [lobbyId]);
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
