@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { TrendingUp, ArrowRight } from "lucide-react";
 
 interface TikTokPuzzleProps {
   originalHashtags: string[];
@@ -9,40 +9,52 @@ interface TikTokPuzzleProps {
 }
 
 export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: TikTokPuzzleProps) => {
+  const [selectedOriginal, setSelectedOriginal] = useState<string | null>(null);
   const [matches, setMatches] = useState<Record<string, string>>({});
-  const [viralScore, setViralScore] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   
-  const hashtagData = originalHashtags.map((tag, idx) => ({
+  const hashtagData = originalHashtags.slice(0, 5).map((tag, idx) => ({
     original: tag,
-    views: Math.floor(Math.random() * 10) + 1,
+    views: idx < 3 ? Math.floor(Math.random() * 5) + 8 : Math.floor(Math.random() * 3) + 2,
     trending: idx < 3
   }));
 
-  const handleMatch = (original: string, sabotage: string) => {
-    const newMatches = { ...matches, [original]: sabotage };
-    setMatches(newMatches);
-    calculateScore(newMatches);
+  const handleOriginalClick = (hashtag: string) => {
+    setSelectedOriginal(hashtag);
     setShowFeedback(false);
   };
-  
-  const calculateScore = (currentMatches: Record<string, string>) => {
+
+  const handleSabotageClick = (sabotage: string) => {
+    if (!selectedOriginal) return;
+    
+    const newMatches = { ...matches, [selectedOriginal]: sabotage };
+    setMatches(newMatches);
+    setSelectedOriginal(null);
+  };
+
+  const calculateScore = () => {
     let score = 0;
-    Object.entries(currentMatches).forEach(([original, sabotage]) => {
-      const data = hashtagData.find(h => h.original === original);
-      if (data?.trending && sabotageHashtags.includes(sabotage)) {
-        score += 20;
+    const trendingCount = hashtagData.filter(h => h.trending).length;
+    
+    hashtagData.forEach((data) => {
+      if (data.trending && matches[data.original]) {
+        score += Math.floor(100 / trendingCount);
       }
     });
-    setViralScore(score);
+    
+    return score;
   };
   
   const handleSubmit = () => {
     setShowFeedback(true);
-    if (viralScore >= 80) {
+    const score = calculateScore();
+    if (score >= 80) {
       setTimeout(onSolve, 1500);
     }
   };
+
+  const currentScore = calculateScore();
+  const trendingHashtags = hashtagData.filter(h => h.trending);
 
   return (
     <div className="bg-card rounded-3xl p-8 cartoon-shadow">
@@ -50,34 +62,49 @@ export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: Ti
         Sabotage Viral TikTok
       </h3>
       <p className="text-center text-muted-foreground mb-6 text-sm">
-        Associez les hashtags tendance avec des alternatives anti-virales
+        1. Cliquez sur un hashtag tendance<br/>
+        2. Cliquez sur une alternative anti-virale pour l'associer
       </p>
 
       <div className="mb-6 bg-secondary/20 rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium">Score de Destruction Virale</span>
-          <span className="text-lg font-bold">{viralScore}%</span>
+          <span className="text-lg font-bold">{currentScore}%</span>
         </div>
         <div className="w-full bg-secondary/30 rounded-full h-3">
           <div 
-            className={`h-3 rounded-full transition-all ${viralScore >= 80 ? 'bg-green-500' : 'bg-destructive'}`}
-            style={{ width: `${viralScore}%` }}
+            className={`h-3 rounded-full transition-all ${currentScore >= 80 ? 'bg-green-500' : 'bg-destructive'}`}
+            style={{ width: `${currentScore}%` }}
           />
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <div>
-          <h4 className="font-semibold mb-3 text-sm">Hashtags Tendance (à saboter)</h4>
+          <h4 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Hashtags Tendance
+          </h4>
           <div className="space-y-2">
-            {hashtagData.filter(h => h.trending).map((data) => (
-              <div key={data.original} className="bg-secondary/30 p-3 rounded-lg">
-                <div className="font-mono text-sm">{data.original}</div>
-                <div className="text-xs text-muted-foreground">{data.views}M vues</div>
+            {trendingHashtags.map((data) => (
+              <Button
+                key={data.original}
+                variant={selectedOriginal === data.original ? "default" : "outline"}
+                size="sm"
+                className="w-full justify-between"
+                onClick={() => handleOriginalClick(data.original)}
+              >
+                <div className="text-left">
+                  <div className="font-mono text-sm">{data.original}</div>
+                  <div className="text-xs opacity-70">{data.views}M vues</div>
+                </div>
                 {matches[data.original] && (
-                  <div className="mt-2 text-xs text-green-400">→ {matches[data.original]}</div>
+                  <div className="flex items-center gap-1 text-xs">
+                    <ArrowRight className="w-3 h-3" />
+                    {matches[data.original]}
+                  </div>
                 )}
-              </div>
+              </Button>
             ))}
           </div>
         </div>
@@ -91,11 +118,8 @@ export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: Ti
                 variant="outline"
                 size="sm"
                 className="w-full justify-start font-mono text-xs"
-                onClick={() => {
-                  const unmatched = hashtagData.find(h => h.trending && !matches[h.original]);
-                  if (unmatched) handleMatch(unmatched.original, tag);
-                }}
-                disabled={Object.values(matches).includes(tag)}
+                onClick={() => handleSabotageClick(tag)}
+                disabled={!selectedOriginal || Object.values(matches).includes(tag)}
               >
                 {tag}
               </Button>
@@ -104,19 +128,19 @@ export const TikTokPuzzle = ({ originalHashtags, sabotageHashtags, onSolve }: Ti
         </div>
       </div>
 
-      {showFeedback && viralScore < 80 && (
+      {showFeedback && currentScore < 80 && (
         <p className="mb-4 text-center text-destructive text-sm">
-          Score insuffisant ! Assurez-vous d'associer tous les hashtags tendance.
+          Score: {currentScore}% - Il faut au moins 80% ! Associez tous les hashtags tendance.
         </p>
       )}
 
       <Button 
         onClick={handleSubmit}
-        disabled={Object.keys(matches).length === 0}
+        disabled={Object.keys(matches).length !== trendingHashtags.length}
         className="w-full"
         size="lg"
       >
-        Lancer le Sabotage ({Object.keys(matches).length} remplacements)
+        Lancer le Sabotage ({Object.keys(matches).length}/{trendingHashtags.length})
       </Button>
     </div>
   );
