@@ -461,23 +461,35 @@ export const tiktokFarmConfig: RoomConfig = {
         component: 'AlgorithmPuzzle',
         data: {
           parameters: [
-            { name: 'engagement_weight', current: 0.8, target: 0.1 },
-            { name: 'view_duration', current: 0.9, target: 0.2 },
-            { name: 'share_rate', current: 0.7, target: 0.1 },
-            { name: 'comment_count', current: 0.6, target: 0.1 }
+            { name: 'engagement_rate', current: 85, min: 0, max: 100, target: 15, weight: 1.0, linkedTo: ['viral_coefficient'] },
+            { name: 'watch_time', current: 90, min: 0, max: 100, target: 20, weight: 1.2, linkedTo: ['retention_rate'] },
+            { name: 'share_velocity', current: 75, min: 0, max: 100, target: 10, weight: 0.9, linkedTo: ['engagement_rate', 'comment_density'] },
+            { name: 'comment_density', current: 70, min: 0, max: 100, target: 15, weight: 0.8, linkedTo: ['share_velocity'] },
+            { name: 'viral_coefficient', current: 80, min: 0, max: 100, target: 12, weight: 1.1, linkedTo: ['engagement_rate', 'watch_time'] },
+            { name: 'retention_rate', current: 88, min: 0, max: 100, target: 25, weight: 1.0, linkedTo: ['watch_time'] },
+            { name: 'follower_growth', current: 65, min: 0, max: 100, target: 18, weight: 0.7, linkedTo: ['viral_coefficient', 'engagement_rate'] },
+            { name: 'interaction_score', current: 78, min: 0, max: 100, target: 20, weight: 0.9, linkedTo: ['comment_density', 'share_velocity'] }
           ],
-          threshold: 0.3
+          threshold: 25,
+          maxTotalScore: 180,
+          constraints: [
+            { params: ['engagement_rate', 'watch_time'], rule: 'Baisser engagement_rate augmente watch_time de 30%' },
+            { params: ['share_velocity', 'viral_coefficient'], rule: 'Si share_velocity < 30, viral_coefficient -20' },
+            { params: ['comment_density', 'interaction_score'], rule: 'Ces deux doivent avoir max 10 pts de différence' }
+          ]
         },
         validation: {
           type: 'custom',
           validator: (params: any[]) => {
-            return params.every(p => p.value <= 0.3);
+            const allUnderThreshold = params.every(p => p.value <= 25);
+            const totalScore = params.reduce((sum, p) => sum + (p.value * (p.weight || 1)), 0);
+            return allUnderThreshold && totalScore <= 180;
           }
         },
         hints: [
-          'Réduisez tous les paramètres en dessous de 0.3.',
-          'L\'engagement et la durée de vue sont les plus importants.',
-          'Plus les valeurs sont basses, moins ils sont recommandés.'
+          'Chaque paramètre doit être ≤ 25, mais attention aux dépendances !',
+          'Baisser un paramètre peut en augmenter d\'autres - trouvez l\'équilibre.',
+          'Le score total pondéré doit rester sous 180 points.'
         ],
         rewards: []
       }
