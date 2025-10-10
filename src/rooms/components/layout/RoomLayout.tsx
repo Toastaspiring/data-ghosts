@@ -49,6 +49,43 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
   const [showWaitingModal, setShowWaitingModal] = useState(false);
   const [playersStatus, setPlayersStatus] = useState<Array<{id: string, name: string, completed: boolean, ready?: boolean}>>([]);
   const [playerId] = useState(sessionStorage.getItem("playerId") || "");
+  const [isLoadingPuzzles, setIsLoadingPuzzles] = useState(true);
+
+  // Load completed puzzles from database on mount
+  useEffect(() => {
+    const loadCompletedPuzzles = async () => {
+      if (!lobbyId || !playerId) return;
+      
+      try {
+        const { data: lobbyData } = await supabase
+          .from('lobbies')
+          .select('completed_puzzles, game_state')
+          .eq('id', lobbyId)
+          .single();
+        
+        if (lobbyData) {
+          // Get player-specific completed puzzles
+          const allCompletedPuzzles = (lobbyData.completed_puzzles as any) || {};
+          const playerCompletedPuzzles = allCompletedPuzzles[playerId] || [];
+          setCompletedPuzzles(playerCompletedPuzzles);
+          
+          // Check if player already finished all puzzles
+          const gameState = (lobbyData as any).game_state || {};
+          const completedPlayers = gameState.completed_players || {};
+          if (completedPlayers[playerId]?.completed) {
+            setRoomCode(completedPlayers[playerId].code || '');
+            setShowWaitingModal(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading completed puzzles:', error);
+      } finally {
+        setIsLoadingPuzzles(false);
+      }
+    };
+    
+    loadCompletedPuzzles();
+  }, [lobbyId, playerId]);
 
   // Enhanced audio initialization with retry mechanism
   useEffect(() => {
@@ -209,6 +246,36 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
     if (solution && !completedPuzzles.includes(puzzleId)) {
       const newCompletedPuzzles = [...completedPuzzles, puzzleId];
       setCompletedPuzzles(newCompletedPuzzles);
+      
+      // Save individual puzzle completion to database
+      if (lobbyId && playerId) {
+        try {
+          const { data: lobbyData } = await supabase
+            .from('lobbies')
+            .select('completed_puzzles')
+            .eq('id', lobbyId)
+            .single();
+          
+          if (lobbyData) {
+            const allCompletedPuzzles = (lobbyData.completed_puzzles as any) || {};
+            allCompletedPuzzles[playerId] = newCompletedPuzzles;
+            
+            await supabase
+              .from('lobbies')
+              .update({ completed_puzzles: allCompletedPuzzles })
+              .eq('id', lobbyId);
+            
+            console.log(`✓ Puzzle ${puzzleId} saved to database for player ${playerId}`);
+          }
+        } catch (error) {
+          console.error('Error saving puzzle completion:', error);
+        }
+      }
+      
+      // Show success toast for individual puzzle
+      toast.success('✓ Mission Terminée !', {
+        description: `Puzzle "${puzzleId}" résolu avec succès`
+      });
       
       // Check if all puzzles are now complete
       if (newCompletedPuzzles.length === config.elements.length) {
@@ -401,7 +468,12 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid gap-4">
+                {isLoadingPuzzles ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
                   {config.elements.map((element, index) => {
                     const isCompleted = completedPuzzles.includes(element.id);
                     const isUnlocked = true; // All puzzles unlocked
@@ -460,7 +532,8 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
                       </Card>
                     );
                   })}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
