@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,13 +11,39 @@ interface FactCheckPuzzleProps {
 }
 
 export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSolve }: FactCheckPuzzleProps) => {
+  // Randomize and track original indices
+  const { shuffledFalse, shuffledCorrect, falseIndexMap, correctIndexMap } = useMemo(() => {
+    if (!falseStatements.length || !correctFacts.length) {
+      return { shuffledFalse: [], shuffledCorrect: [], falseIndexMap: new Map(), correctIndexMap: new Map() };
+    }
+
+    // Create shuffled arrays with original indices
+    const falseWithIndices = falseStatements.map((text, idx) => ({ text, originalIdx: idx }));
+    const correctWithIndices = correctFacts.map((text, idx) => ({ text, originalIdx: idx }));
+
+    // Shuffle using Fisher-Yates
+    const shuffleFalse = [...falseWithIndices].sort(() => Math.random() - 0.5);
+    const shuffleCorrect = [...correctWithIndices].sort(() => Math.random() - 0.5);
+
+    // Create maps: shuffled index -> original index
+    const falseMap = new Map(shuffleFalse.map((item, idx) => [idx, item.originalIdx]));
+    const correctMap = new Map(shuffleCorrect.map((item, idx) => [idx, item.originalIdx]));
+
+    return {
+      shuffledFalse: shuffleFalse.map(item => item.text),
+      shuffledCorrect: shuffleCorrect.map(item => item.text),
+      falseIndexMap: falseMap,
+      correctIndexMap: correctMap
+    };
+  }, [falseStatements, correctFacts]);
+
   const [selectedMatches, setSelectedMatches] = useState<Record<number, number>>({});
   const [selectedFalse, setSelectedFalse] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
 
   // Safety check
-  if (!falseStatements.length || !correctFacts.length) {
+  if (!shuffledFalse.length || !shuffledCorrect.length) {
     return <div className="p-6 text-center text-muted-foreground">Chargement du puzzle...</div>;
   }
 
@@ -53,12 +79,18 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
     setSubmitted(true);
     setShowFeedback(true);
     
-    // Check if all matches are correct
-    const allCorrect = Object.entries(selectedMatches).every(
-      ([falseIdx, correctIdx]) => parseInt(falseIdx) === correctIdx
-    );
+    // Check if all matches are correct using original indices
+    const allCorrect = Object.keys(selectedMatches).every(key => {
+      const shuffledFalseIdx = parseInt(key);
+      const shuffledCorrectIdx = selectedMatches[shuffledFalseIdx];
+      
+      const originalFalseIdx = falseIndexMap.get(shuffledFalseIdx);
+      const originalCorrectIdx = correctIndexMap.get(shuffledCorrectIdx);
+      
+      return originalFalseIdx === originalCorrectIdx;
+    });
     
-    const allMatched = Object.keys(selectedMatches).length === falseStatements.length;
+    const allMatched = Object.keys(selectedMatches).length === shuffledFalse.length;
     
     if (allCorrect && allMatched) {
       setTimeout(onSolve, 1500);
@@ -70,11 +102,15 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
     setShowFeedback(false);
   };
 
-  const correctCount = Object.entries(selectedMatches).filter(
-    ([falseIdx, correctIdx]) => parseInt(falseIdx) === correctIdx
-  ).length;
+  const correctCount = Object.keys(selectedMatches).filter(key => {
+    const shuffledFalseIdx = parseInt(key);
+    const shuffledCorrectIdx = selectedMatches[shuffledFalseIdx];
+    const originalFalseIdx = falseIndexMap.get(shuffledFalseIdx);
+    const originalCorrectIdx = correctIndexMap.get(shuffledCorrectIdx);
+    return originalFalseIdx === originalCorrectIdx;
+  }).length;
 
-  const isSuccess = correctCount === falseStatements.length;
+  const isSuccess = correctCount === shuffledFalse.length;
 
   return (
     <div className="space-y-6 p-6">
@@ -87,7 +123,7 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
           Associez chaque fausse info avec sa correction scientifique
         </p>
         <Badge variant="outline">
-          Matches: {Object.keys(selectedMatches).length}/{falseStatements.length}
+          Matches: {Object.keys(selectedMatches).length}/{shuffledFalse.length}
         </Badge>
       </div>
 
@@ -99,11 +135,13 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
             Fausses Informations
           </h3>
           
-          {falseStatements.map((statement, falseIdx) => {
+          {shuffledFalse.map((statement, falseIdx) => {
             const isMatched = selectedMatches[falseIdx] !== undefined;
             const isSelected = selectedFalse === falseIdx;
             const matchedCorrectIdx = selectedMatches[falseIdx];
-            const isCorrectMatch = submitted && matchedCorrectIdx === falseIdx;
+            const originalFalseIdx = falseIndexMap.get(falseIdx);
+            const originalCorrectIdx = matchedCorrectIdx !== undefined ? correctIndexMap.get(matchedCorrectIdx) : undefined;
+            const isCorrectMatch = submitted && originalFalseIdx === originalCorrectIdx;
 
             return (
               <Card
@@ -140,7 +178,7 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
                       </Button>
                     )}
                   </div>
-                  <p className="text-sm">{statement}</p>
+                  <p className="text-sm glitch-text">{statement}</p>
                   
                   {isMatched && (
                     <div className="pt-2 border-t border-border">
@@ -165,9 +203,10 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
             Faits Scientifiques
           </h3>
           
-          {correctFacts.map((fact, correctIdx) => {
+          {shuffledCorrect.map((fact, correctIdx) => {
             const isAlreadyUsed = Object.values(selectedMatches).includes(correctIdx);
-            const metrics = factMetrics[correctIdx];
+            const originalCorrectIdx = correctIndexMap.get(correctIdx);
+            const metrics = factMetrics[originalCorrectIdx || 0];
 
             return (
               <Card
@@ -197,7 +236,7 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
                       </div>
                     )}
                   </div>
-                  <p className="text-sm">{fact}</p>
+                  <p className="text-sm glitch-text">{fact}</p>
                   
                   {!submitted && (
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground pt-2 border-t border-border">
@@ -228,10 +267,10 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
               <>
                 <div className="text-3xl">❌</div>
                 <p className="font-bold text-destructive text-lg">
-                  {correctCount}/{falseStatements.length} associations correctes
+                  {correctCount}/{shuffledFalse.length} associations correctes
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  💡 Indice: Chaque fausse info #{"{"}n{"}"} correspond au fait #{"{"}n{"}"}
+                  💡 Les associations correctes existent, mais l'ordre est mélangé
                 </p>
               </>
             )}
@@ -248,11 +287,11 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
       <div className="flex gap-2">
         <Button
           onClick={handleSubmit}
-          disabled={Object.keys(selectedMatches).length !== falseStatements.length || submitted}
+          disabled={Object.keys(selectedMatches).length !== shuffledFalse.length || submitted}
           className="flex-1"
           size="lg"
         >
-          Valider les Corrections ({Object.keys(selectedMatches).length}/{falseStatements.length})
+          Valider les Corrections ({Object.keys(selectedMatches).length}/{shuffledFalse.length})
         </Button>
         
         {submitted && !isSuccess && (
@@ -270,6 +309,60 @@ export const FactCheckPuzzle = ({ falseStatements = [], correctFacts = [], onSol
         <p>💡 Cliquez sur une fausse info, puis sur le fait correspondant</p>
         <p>⚠️ Les métriques de popularité sont trompeuses !</p>
       </div>
+
+      <style>{`
+        .glitch-text {
+          position: relative;
+          animation: glitch 3s infinite;
+          display: inline-block;
+        }
+
+        @keyframes glitch {
+          0%, 92%, 100% {
+            transform: translate(0);
+            filter: blur(0);
+            text-shadow: none;
+          }
+          93% {
+            transform: translate(-2px, 1px);
+            filter: blur(0.5px);
+            text-shadow: 2px 0 rgba(255, 0, 0, 0.4), -2px 0 rgba(0, 255, 255, 0.4);
+          }
+          94% {
+            transform: translate(2px, -1px);
+            filter: blur(0.5px);
+            text-shadow: -2px 0 rgba(255, 0, 0, 0.4), 2px 0 rgba(0, 255, 255, 0.4);
+          }
+          95% {
+            transform: translate(-1px, -1px);
+            filter: blur(0.3px);
+            text-shadow: 1px 0 rgba(255, 0, 0, 0.3), -1px 0 rgba(0, 255, 255, 0.3);
+          }
+        }
+
+        .glitch-text:hover {
+          animation: glitch-intense 0.5s infinite;
+        }
+
+        @keyframes glitch-intense {
+          0%, 100% {
+            transform: translate(0);
+            text-shadow: none;
+          }
+          25% {
+            transform: translate(-3px, 2px);
+            text-shadow: 3px 0 rgba(255, 0, 0, 0.6), -3px 0 rgba(0, 255, 255, 0.6);
+          }
+          50% {
+            transform: translate(3px, -2px);
+            text-shadow: -3px 0 rgba(255, 0, 0, 0.6), 3px 0 rgba(0, 255, 255, 0.6);
+          }
+          75% {
+            transform: translate(-2px, -2px);
+            text-shadow: 2px 0 rgba(255, 0, 0, 0.5), -2px 0 rgba(0, 255, 255, 0.5);
+          }
+        }
+      `}</style>
     </div>
   );
 };
