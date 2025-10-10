@@ -196,12 +196,15 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn(
-        "max-w-4xl max-h-[90vh] overflow-y-auto",
-        "bg-background/95 backdrop-blur-sm border border-primary/40",
-        "shadow-[0_0_40px_rgba(0,255,255,0.2)]",
-        className
-      )}>
+      <DialogContent 
+        hideClose={true}
+        className={cn(
+          "max-w-4xl max-h-[90vh] overflow-y-auto",
+          "bg-background/95 backdrop-blur-sm border border-primary/40",
+          "shadow-[0_0_40px_rgba(0,255,255,0.2)]",
+          className
+        )}
+      >
         <DialogHeader className="space-y-4 border-b border-primary/20 pb-4">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
@@ -212,12 +215,6 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
                 <Badge className={getDifficultyColor(puzzle.difficulty)}>
                   Difficulty: {puzzle.difficulty}/5
                 </Badge>
-                {puzzle.timeLimit && (
-                  <Badge variant="outline" className="neon-border">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {formatTime(puzzle.timeLimit - timeElapsed)}
-                  </Badge>
-                )}
               </div>
             </div>
             
