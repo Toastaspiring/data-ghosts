@@ -352,7 +352,7 @@ export const tiktokFarmConfig: RoomConfig = {
       description: 'Déclenchez l\'alarme incendie pour évacuer les gens de la salle 2 et permettre le sabotage.',
       position: { x: 1250, y: 130 },
       size: { width: 80, height: 60 },
-      dependencies: [], // All puzzles unlocked from start
+      dependencies: [],
       rewards: [
         {
           type: 'crossRoom',
@@ -364,14 +364,6 @@ export const tiktokFarmConfig: RoomConfig = {
             value: 'fire-alarm-activated',
             description: 'L\'alarme incendie a évacué la salle 2 - vous pouvez maintenant y entrer en sécurité.'
           }
-        },
-        {
-          type: 'clue',
-          data: {
-            id: 'room1-code',
-            title: 'Premier Code',
-            description: 'Code de la salle 1 : 2847'
-          }
         }
       ],
       isUnlocked: true,
@@ -380,7 +372,7 @@ export const tiktokFarmConfig: RoomConfig = {
         id: 'fire-alarm-activation',
         type: 'sequence',
         difficulty: 2,
-        timeLimit: 120,
+        timeLimit: 180,
         component: 'AlarmActivationPuzzle',
         data: {
           sequence: ['BREAK_GLASS', 'PULL_LEVER', 'CONFIRM_EVACUATION'],
@@ -395,12 +387,216 @@ export const tiktokFarmConfig: RoomConfig = {
           'Cassez d\'abord la vitre de protection.',
           'Confirmez l\'évacuation pour déclencher l\'alarme dans la salle 2.'
         ],
-        rewards: [
-          {
-            type: 'score',
-            data: { points: 1000, category: 'room-completion' }
+        rewards: []
+      }
+    },
+
+    {
+      id: 'algorithm-manipulation',
+      type: 'computer',
+      name: 'Manipulation d\'Algorithme',
+      description: 'Modifiez l\'algorithme de recommandation pour que leurs vidéos ne soient plus suggérées.',
+      position: { x: 550, y: 150 },
+      size: { width: 140, height: 100 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'algo-sabotaged',
+            title: 'Algorithme Saboté',
+            description: 'Leurs vidéos n\'apparaissent plus dans les recommandations - visibilité zéro.'
           }
-        ]
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'algorithm-hack',
+        type: 'code',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'AlgorithmPuzzle',
+        data: {
+          parameters: [
+            { name: 'engagement_weight', current: 0.8, target: 0.1 },
+            { name: 'view_duration', current: 0.9, target: 0.2 },
+            { name: 'share_rate', current: 0.7, target: 0.1 },
+            { name: 'comment_count', current: 0.6, target: 0.1 }
+          ],
+          threshold: 0.3
+        },
+        validation: {
+          type: 'custom',
+          validator: (params: any[]) => {
+            return params.every(p => p.value <= 0.3);
+          }
+        },
+        hints: [
+          'Réduisez tous les paramètres en dessous de 0.3.',
+          'L\'engagement et la durée de vue sont les plus importants.',
+          'Plus les valeurs sont basses, moins ils sont recommandés.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'comment-management',
+      type: 'device',
+      name: 'Gestion des Commentaires',
+      description: 'Remplissez la section commentaires avec des critiques et des accusations de fake.',
+      position: { x: 900, y: 500 },
+      size: { width: 130, height: 90 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'comments-flooded',
+            title: 'Commentaires Négatifs',
+            description: 'Leurs vidéos sont inondées de commentaires négatifs - leur réputation est ruinée.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'comment-flood',
+        type: 'pattern',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'CommentPuzzle',
+        data: {
+          negative_templates: [
+            'C\'est clairement fake',
+            'Les éclairages sont suspects',
+            'On voit le green screen',
+            'Arrêtez de nous mentir',
+            'Publi déguisée'
+          ],
+          target_count: 50,
+          variations_needed: 10
+        },
+        validation: {
+          type: 'custom',
+          validator: (comments: string[]) => {
+            return comments.length >= 50;
+          }
+        },
+        hints: [
+          'Utilisez les templates de commentaires négatifs.',
+          'Variez les formulations pour paraître authentique.',
+          'Visez au moins 50 commentaires négatifs.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'view-inflation',
+      type: 'computer',
+      name: 'Détection de Vues Gonflées',
+      description: 'Exposez les preuves que leurs vues sont achetées et non organiques.',
+      position: { x: 750, y: 700 },
+      size: { width: 120, height: 85 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'fake-views-exposed',
+            title: 'Vues Artificielles',
+            description: 'Preuves que 80% de leurs vues sont des bots - leur fraude est exposée.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'view-analysis',
+        type: 'analysis',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'ViewAnalysisPuzzle',
+        data: {
+          total_views: 5000000,
+          organic_indicators: {
+            watch_time_avg: 3,
+            engagement_rate: 0.02,
+            geographic_diversity: 0.15,
+            device_variety: 0.25
+          },
+          bot_indicators: {
+            watch_time_avg: 0.5,
+            engagement_rate: 0.001,
+            geographic_clustering: 0.95,
+            device_repetition: 0.85
+          },
+          bot_percentage_threshold: 60
+        },
+        validation: {
+          type: 'custom',
+          validator: (analysis: any) => {
+            return analysis.bot_percentage >= 60;
+          }
+        },
+        hints: [
+          'Analysez les patterns de visionnage suspects.',
+          'Les bots ont des temps de visionnage très courts.',
+          'La diversité géographique faible indique des bots.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'engagement-metrics',
+      type: 'device',
+      name: 'Manipulation des Métriques',
+      description: 'Sabotez leurs métriques d\'engagement pour faire chuter leur score de créateur.',
+      position: { x: 300, y: 500 },
+      size: { width: 110, height: 95 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'metrics-crashed',
+            title: 'Métriques Effondrées',
+            description: 'Leur score de créateur est en chute libre - démonétisation imminente.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'metrics-sabotage',
+        type: 'logic',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'MetricsPuzzle',
+        data: {
+          metrics: [
+            { name: 'likes', current: 500000, target: 50000 },
+            { name: 'shares', current: 100000, target: 5000 },
+            { name: 'saves', current: 80000, target: 8000 },
+            { name: 'follows', current: 250000, target: 25000 }
+          ],
+          reduction_factor: 10
+        },
+        validation: {
+          type: 'custom',
+          validator: (metrics: any[]) => {
+            return metrics.every(m => m.value <= m.current / 10);
+          }
+        },
+        hints: [
+          'Réduisez chaque métrique d\'au moins 90%.',
+          'Les likes et follows sont les plus importants.',
+          'Divisez toutes les valeurs par 10 minimum.'
+        ],
+        rewards: []
       }
     }
   ],
@@ -426,19 +622,27 @@ export const tiktokFarmConfig: RoomConfig = {
     totalTime: 2700, // 45 minutes
     puzzleTimeouts: {
       'captcha-puzzle': 180,
-      'hashtag-replacement': 240,
-      'viral-creation': 600,
-      'fact-correction': 300,
-      'seven-differences-game': 420,
-      'fire-alarm-activation': 120
+      'hashtag-replacement': 180,
+      'viral-creation': 200,
+      'fact-correction': 180,
+      'seven-differences-game': 200,
+      'fire-alarm-activation': 180,
+      'algorithm-hack': 200,
+      'comment-flood': 180,
+      'view-analysis': 200,
+      'metrics-sabotage': 180
     },
     hintCooldowns: {
       'captcha-puzzle': 45,
-      'hashtag-replacement': 60,
-      'viral-creation': 120,
-      'fact-correction': 75,
-      'seven-differences-game': 90,
-      'fire-alarm-activation': 30
+      'hashtag-replacement': 45,
+      'viral-creation': 50,
+      'fact-correction': 45,
+      'seven-differences-game': 50,
+      'fire-alarm-activation': 45,
+      'algorithm-hack': 50,
+      'comment-flood': 45,
+      'view-analysis': 50,
+      'metrics-sabotage': 45
     }
   },
 

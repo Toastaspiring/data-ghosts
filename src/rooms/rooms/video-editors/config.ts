@@ -391,7 +391,7 @@ export const videoEditorsConfig: RoomConfig = {
       description: 'Un bloc-notes avec la liste des hashtags à éviter. Informations utiles pour la salle 1.',
       position: { x: 120, y: 350 },
       size: { width: 80, height: 60 },
-      dependencies: [], // All puzzles unlocked from start
+      dependencies: [],
       rewards: [
         {
           type: 'crossRoom',
@@ -403,14 +403,6 @@ export const videoEditorsConfig: RoomConfig = {
             value: ['#Aesthetic', '#Viral', '#Trending', '#InfluencerLife'],
             description: 'Hashtags tendance à utiliser pour la vidéo virale.'
           }
-        },
-        {
-          type: 'clue',
-          data: {
-            id: 'room3-code',
-            title: 'Troisième Code',
-            description: 'Code de la salle 3 : 7629'
-          }
         }
       ],
       isUnlocked: true,
@@ -419,7 +411,7 @@ export const videoEditorsConfig: RoomConfig = {
         id: 'hashtag-analysis',
         type: 'analysis',
         difficulty: 2,
-        timeLimit: 200,
+        timeLimit: 180,
         component: 'HashtagAnalysisPuzzle',
         data: {
           trending_hashtags: ['#Aesthetic', '#Viral', '#Trending', '#InfluencerLife'],
@@ -436,12 +428,222 @@ export const videoEditorsConfig: RoomConfig = {
           'Évitez ceux marqués comme "à éviter" dans les notes.',
           'Les hashtags tendance changent selon les plateformes.'
         ],
-        rewards: [
-          {
-            type: 'score',
-            data: { points: 1500, category: 'room-completion' }
+        rewards: []
+      }
+    },
+
+    {
+      id: 'color-grading',
+      type: 'computer',
+      name: 'Station de Color Grading',
+      description: 'Sabotez les réglages de couleur pour rendre leurs vidéos hideuses.',
+      position: { x: 700, y: 200 },
+      size: { width: 140, height: 100 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'colors-ruined',
+            title: 'Couleurs Désastreuses',
+            description: 'Les réglages de couleur sont catastrophiques - leurs vidéos sont immondes.'
           }
-        ]
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'color-sabotage',
+        type: 'pattern',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'ColorGradingPuzzle',
+        data: {
+          parameters: [
+            { name: 'saturation', optimal: 50, sabotage: 150 },
+            { name: 'contrast', optimal: 100, sabotage: 200 },
+            { name: 'temperature', optimal: 6500, sabotage: 3000 },
+            { name: 'tint', optimal: 0, sabotage: 100 }
+          ],
+          target: 'extreme_values'
+        },
+        validation: {
+          type: 'custom',
+          validator: (params: any) => {
+            return params.saturation >= 120 && params.contrast >= 150 && 
+                   (params.temperature <= 4000 || params.temperature >= 9000);
+          }
+        },
+        hints: [
+          'Poussez tous les réglages à l\'extrême.',
+          'Saturation et contraste élevés créent un effet horrible.',
+          'Une température de couleur extrême ruine l\'ambiance.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'audio-mixing',
+      type: 'equipment',
+      name: 'Table de Mixage Audio',
+      description: 'Déséquilibrez complètement les niveaux audio pour rendre les vidéos inexploitables.',
+      position: { x: 1300, y: 650 },
+      size: { width: 120, height: 90 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'audio-destroyed',
+            title: 'Audio Déséquilibré',
+            description: 'L\'audio est complètement déséquilibré - impossible à écouter.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'audio-imbalance',
+        type: 'pattern',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'AudioMixPuzzle',
+        data: {
+          tracks: [
+            { name: 'Dialogue', optimal: -6, current: -6 },
+            { name: 'Music', optimal: -20, current: -20 },
+            { name: 'Effects', optimal: -15, current: -15 },
+            { name: 'Ambiance', optimal: -25, current: -25 }
+          ],
+          sabotage_strategy: 'extreme_imbalance'
+        },
+        validation: {
+          type: 'custom',
+          validator: (tracks: any[]) => {
+            const dialogue = tracks.find(t => t.name === 'Dialogue');
+            const music = tracks.find(t => t.name === 'Music');
+            return dialogue.level <= -30 || music.level >= -5;
+          }
+        },
+        hints: [
+          'Rendez le dialogue inaudible (très bas).',
+          'Ou mettez la musique beaucoup trop forte.',
+          'Un déséquilibre extrême rend l\'audio inutilisable.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'transition-effects',
+      type: 'computer',
+      name: 'Effets de Transition',
+      description: 'Remplacez leurs transitions élégantes par des effets années 2000 ringards.',
+      position: { x: 450, y: 500 },
+      size: { width: 130, height: 95 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'transitions-tacky',
+            title: 'Transitions Ringardes',
+            description: 'Leurs transitions sont maintenant des star wipes et heart dissolves - totalement ringard.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'transition-sabotage',
+        type: 'logic',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'TransitionPuzzle',
+        data: {
+          elegant_transitions: ['Fade', 'Dissolve', 'Cut', 'Wipe'],
+          tacky_transitions: [
+            'Star Wipe',
+            'Heart Dissolve',
+            'Spinning Cube',
+            'Checkerboard',
+            'Zoom Burst',
+            'Page Peel'
+          ],
+          clips_count: 10,
+          tacky_percentage: 80
+        },
+        validation: {
+          type: 'custom',
+          validator: (transitions: string[]) => {
+            const tackyCount = transitions.filter(t => 
+              ['Star Wipe', 'Heart Dissolve', 'Spinning Cube', 'Checkerboard', 'Zoom Burst', 'Page Peel'].includes(t)
+            ).length;
+            return tackyCount >= 8;
+          }
+        },
+        hints: [
+          'Utilisez au moins 80% de transitions ringardes.',
+          'Star Wipe et Heart Dissolve sont les plus ringards.',
+          'Évitez les transitions élégantes comme Fade et Cut.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'export-settings',
+      type: 'computer',
+      name: 'Paramètres d\'Export',
+      description: 'Modifiez les paramètres d\'export pour obtenir une qualité vidéo horrible.',
+      position: { x: 1050, y: 450 },
+      size: { width: 110, height: 85 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'export-ruined',
+            title: 'Export Catastrophique',
+            description: 'Leurs vidéos sont exportées en 240p avec une compression maximale - qualité déplorable.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'export-degradation',
+        type: 'logic',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'ExportPuzzle',
+        data: {
+          optimal_settings: {
+            resolution: '1080p',
+            bitrate: 8000,
+            codec: 'H.264',
+            framerate: 60
+          },
+          sabotage_settings: {
+            resolution: ['240p', '360p', '480p'],
+            bitrate: [500, 1000, 1500],
+            codec: ['MPEG-1', 'DivX'],
+            framerate: [15, 24, 30]
+          }
+        },
+        validation: {
+          type: 'custom',
+          validator: (settings: any) => {
+            return settings.resolution === '240p' && settings.bitrate <= 1000;
+          }
+        },
+        hints: [
+          'Choisissez la résolution la plus basse possible.',
+          'Un bitrate sous 1000 kbps garantit une qualité horrible.',
+          '240p avec 500 kbps est optimal pour le sabotage.'
+        ],
+        rewards: []
       }
     }
   ],
@@ -466,20 +668,28 @@ export const videoEditorsConfig: RoomConfig = {
   timing: {
     totalTime: 2700, // 45 minutes
     puzzleTimeouts: {
-      'corruption-method': 240,
-      'contract-analysis': 480,
+      'corruption-method': 180,
+      'contract-analysis': 200,
       'password-discovery': 180,
-      'video-timecode-analysis': 420,
-      'subtle-sabotage': 300,
-      'hashtag-analysis': 200
+      'video-timecode-analysis': 200,
+      'subtle-sabotage': 180,
+      'hashtag-analysis': 180,
+      'color-sabotage': 200,
+      'audio-imbalance': 180,
+      'transition-sabotage': 180,
+      'export-degradation': 200
     },
     hintCooldowns: {
-      'corruption-method': 60,
-      'contract-analysis': 120,
+      'corruption-method': 45,
+      'contract-analysis': 50,
       'password-discovery': 45,
-      'video-timecode-analysis': 100,
-      'subtle-sabotage': 75,
-      'hashtag-analysis': 50
+      'video-timecode-analysis': 50,
+      'subtle-sabotage': 45,
+      'hashtag-analysis': 45,
+      'color-sabotage': 50,
+      'audio-imbalance': 45,
+      'transition-sabotage': 45,
+      'export-degradation': 50
     }
   },
 

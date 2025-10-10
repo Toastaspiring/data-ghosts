@@ -286,14 +286,6 @@ export const fakeScenesConfig: RoomConfig = {
             value: 'scene_differences',
             description: 'Images de comparaison pour le jeu des 7 différences de la salle 1.'
           }
-        },
-        {
-          type: 'clue',
-          data: {
-            id: 'room2-code',
-            title: 'Deuxième Code',
-            description: 'Code de la salle 2 : 1593'
-          }
         }
       ],
       isUnlocked: true,
@@ -302,7 +294,7 @@ export const fakeScenesConfig: RoomConfig = {
         id: 'scene-analysis',
         type: 'spatial',
         difficulty: 3,
-        timeLimit: 360,
+        timeLimit: 180,
         component: 'SceneAnalysisPuzzle',
         data: {
           real_scene: '/images/rooms/real-studio.jpg',
@@ -320,19 +312,306 @@ export const fakeScenesConfig: RoomConfig = {
         },
         validation: {
           type: 'exact',
-          correctAnswer: 7 // All discrepancies found
+          correctAnswer: 7
         },
         hints: [
           'Comparez méthodiquement chaque élément visuel.',
           'Les ombres ne mentent jamais sur la vraie source lumineuse.',
           'Les reflets révèlent souvent la supercherie.'
         ],
-        rewards: [
-          {
-            type: 'score',
-            data: { points: 1200, category: 'room-completion' }
+        rewards: []
+      }
+    },
+
+    {
+      id: 'props-manipulation',
+      type: 'equipment',
+      name: 'Manipulation d\'Accessoires',
+      description: 'Replacez les accessoires dans le mauvais ordre pour ruiner la continuité des scènes.',
+      position: { x: 180, y: 680 },
+      size: { width: 150, height: 120 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'props-disorder',
+            title: 'Accessoires Désordonnés',
+            description: 'Les accessoires sont dans le mauvais ordre - leurs scènes n\'auront aucune continuité.'
           }
-        ]
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'props-sequence',
+        type: 'sequence',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'PropsPuzzle',
+        data: {
+          correct_order: ['vase', 'book', 'lamp', 'photo', 'clock'],
+          shuffled_props: ['clock', 'vase', 'photo', 'book', 'lamp'],
+          sabotage_goal: 'wrong_order'
+        },
+        validation: {
+          type: 'custom',
+          validator: (order: string[]) => {
+            const correctOrder = ['vase', 'book', 'lamp', 'photo', 'clock'];
+            return order.join() !== correctOrder.join();
+          }
+        },
+        hints: [
+          'L\'objectif est de mettre les accessoires dans le MAUVAIS ordre.',
+          'Plus l\'ordre est chaotique, mieux c\'est.',
+          'Assurez-vous que la séquence ne correspond pas à l\'originale.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'camera-angles',
+      type: 'equipment',
+      name: 'Analyse d\'Angles de Caméra',
+      description: 'Identifiez les angles de caméra impossibles qui révèlent la supercherie des faux décors.',
+      position: { x: 500, y: 150 },
+      size: { width: 100, height: 90 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'camera-exposed',
+            title: 'Angles Impossibles',
+            description: 'Vous avez identifié les angles de caméra qui prouvent que leurs décors sont faux.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'camera-angle-detection',
+        type: 'spatial',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'CameraAnglePuzzle',
+        data: {
+          camera_angles: [
+            { angle: 45, possible: true, reason: 'Standard angle' },
+            { angle: 180, possible: false, reason: 'Shows green screen edge' },
+            { angle: 90, possible: true, reason: 'Side view' },
+            { angle: 270, possible: false, reason: 'Reveals studio lights' },
+            { angle: 135, possible: false, reason: 'Shows crew members' }
+          ],
+          impossible_angles_count: 3
+        },
+        validation: {
+          type: 'exact',
+          correctAnswer: [180, 270, 135]
+        },
+        hints: [
+          'Cherchez les angles qui révèlent les équipements de studio.',
+          'Les angles à 180° et 270° montrent souvent ce qui ne devrait pas être vu.',
+          'Il y a exactement 3 angles impossibles à identifier.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'audio-dubbing',
+      type: 'equipment',
+      name: 'Système de Doublage Audio',
+      description: 'Sabotez le système audio en désynchronisant les voix et les mouvements des lèvres.',
+      position: { x: 650, y: 600 },
+      size: { width: 120, height: 100 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'audio-desync',
+            title: 'Audio Désynchronisé',
+            description: 'L\'audio est complètement désynchronisé - leurs vidéos sont inutilisables.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'audio-sync-sabotage',
+        type: 'temporal',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'AudioSyncPuzzle',
+        data: {
+          video_clips: 5,
+          sync_offset_ms: [0, 500, -300, 700, -150],
+          target_desync: 500
+        },
+        validation: {
+          type: 'custom',
+          validator: (offsets: number[]) => {
+            return offsets.some(offset => Math.abs(offset) >= 500);
+          }
+        },
+        hints: [
+          'Ajoutez un délai d\'au moins 500ms pour rendre la désynchronisation évidente.',
+          'Les décalages négatifs créent aussi des problèmes.',
+          'Testez plusieurs clips pour maximiser l\'effet.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'set-design-flaws',
+      type: 'equipment',
+      name: 'Défauts de Décor',
+      description: 'Introduisez des incohérences anachroniques dans le décor (objets modernes dans une scène historique).',
+      position: { x: 400, y: 450 },
+      size: { width: 110, height: 95 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'anachronisms',
+            title: 'Anachronismes Visibles',
+            description: 'Le décor est rempli d\'incohérences temporelles - leur crédibilité est détruite.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'anachronism-placement',
+        type: 'logic',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'AnachronismPuzzle',
+        data: {
+          time_period: 'medieval',
+          modern_items: ['smartphone', 'laptop', 'electric_light', 'plastic_bottle', 'sneakers'],
+          period_items: ['candle', 'scroll', 'sword', 'goblet', 'tapestry'],
+          items_to_place: 3
+        },
+        validation: {
+          type: 'custom',
+          validator: (items: string[]) => {
+            const modernItems = ['smartphone', 'laptop', 'electric_light', 'plastic_bottle', 'sneakers'];
+            return items.every(item => modernItems.includes(item)) && items.length >= 3;
+          }
+        },
+        hints: [
+          'Placez des objets modernes dans une scène médiévale.',
+          'Plus c\'est évident, mieux c\'est.',
+          'Choisissez au moins 3 objets anachroniques.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'special-effects',
+      type: 'computer',
+      name: 'Effets Spéciaux Exposés',
+      description: 'Révélez les trucages CGI en augmentant la transparence des couches d\'effets.',
+      position: { x: 900, y: 700 },
+      size: { width: 130, height: 110 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'cgi-exposed',
+            title: 'CGI Exposé',
+            description: 'Les effets spéciaux sont maintenant visibles - tout le monde voit les trucages.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'vfx-exposure',
+        type: 'pattern',
+        difficulty: 3,
+        timeLimit: 200,
+        component: 'VFXPuzzle',
+        data: {
+          effect_layers: [
+            { name: 'background', transparency: 0 },
+            { name: 'cgi_character', transparency: 0 },
+            { name: 'lighting', transparency: 0 },
+            { name: 'compositing', transparency: 0 }
+          ],
+          target_transparency: 50
+        },
+        validation: {
+          type: 'custom',
+          validator: (layers: any[]) => {
+            return layers.some(layer => layer.transparency >= 50);
+          }
+        },
+        hints: [
+          'Augmentez la transparence des couches CGI.',
+          'Une transparence de 50% ou plus rend les effets visibles.',
+          'Concentrez-vous sur les couches de personnages CGI.'
+        ],
+        rewards: []
+      }
+    },
+
+    {
+      id: 'behind-scenes',
+      type: 'document',
+      name: 'Révélation des Coulisses',
+      description: 'Publiez les images des coulisses montrant comment les scènes fake sont créées.',
+      position: { x: 1100, y: 200 },
+      size: { width: 100, height: 80 },
+      dependencies: [],
+      rewards: [
+        {
+          type: 'clue',
+          data: {
+            id: 'bts-leaked',
+            title: 'Coulisses Révélées',
+            description: 'Les images des coulisses sont publiques - tout le monde sait que c\'est fake.'
+          }
+        }
+      ],
+      isUnlocked: true,
+      isSolved: false,
+      puzzle: {
+        id: 'bts-leak',
+        type: 'logic',
+        difficulty: 2,
+        timeLimit: 180,
+        component: 'BTSPuzzle',
+        data: {
+          bts_images: [
+            { filename: 'greenscreen_setup.jpg', impact: 'high' },
+            { filename: 'lighting_rig.jpg', impact: 'medium' },
+            { filename: 'crew_visible.jpg', impact: 'high' },
+            { filename: 'script_notes.jpg', impact: 'low' },
+            { filename: 'fake_props.jpg', impact: 'medium' }
+          ],
+          min_impact: 'high',
+          images_to_leak: 2
+        },
+        validation: {
+          type: 'custom',
+          validator: (images: any[]) => {
+            return images.filter(img => img.impact === 'high').length >= 2;
+          }
+        },
+        hints: [
+          'Choisissez les images à fort impact.',
+          'Les images montrant le green screen sont les plus révélatrices.',
+          'Vous devez sélectionner au moins 2 images à fort impact.'
+        ],
+        rewards: []
       }
     }
   ],
@@ -357,16 +636,28 @@ export const fakeScenesConfig: RoomConfig = {
   timing: {
     totalTime: 2700, // 45 minutes
     puzzleTimeouts: {
-      'sabotage-method-choice': 300,
-      'color-lighting-game': 400,
-      'meme-selection': 250,
-      'scene-analysis': 360
+      'sabotage-method-choice': 180,
+      'color-lighting-game': 200,
+      'meme-selection': 180,
+      'scene-analysis': 180,
+      'props-sequence': 180,
+      'camera-angle-detection': 200,
+      'audio-sync-sabotage': 200,
+      'anachronism-placement': 180,
+      'vfx-exposure': 200,
+      'bts-leak': 180
     },
     hintCooldowns: {
-      'sabotage-method-choice': 60,
-      'color-lighting-game': 80,
-      'meme-selection': 50,
-      'scene-analysis': 90
+      'sabotage-method-choice': 45,
+      'color-lighting-game': 50,
+      'meme-selection': 45,
+      'scene-analysis': 45,
+      'props-sequence': 45,
+      'camera-angle-detection': 50,
+      'audio-sync-sabotage': 50,
+      'anachronism-placement': 45,
+      'vfx-exposure': 50,
+      'bts-leak': 45
     }
   },
 
