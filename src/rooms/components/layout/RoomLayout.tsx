@@ -64,9 +64,12 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
           .single();
         
         if (lobbyData) {
-          // Get player-specific completed puzzles
-          const allCompletedPuzzles = (lobbyData.completed_puzzles as any) || {};
-          const playerCompletedPuzzles = allCompletedPuzzles[playerId] || [];
+          // Get completed puzzles (support old array format and new per-player map)
+          const rawCompleted = (lobbyData as any).completed_puzzles;
+          const allCompletedPuzzles = rawCompleted && !Array.isArray(rawCompleted) ? rawCompleted : {};
+          const playerCompletedPuzzles = Array.isArray(rawCompleted)
+            ? (rawCompleted as string[])
+            : (allCompletedPuzzles[playerId] || []);
           setCompletedPuzzles(playerCompletedPuzzles);
           
           // Check if player already finished all puzzles
@@ -242,12 +245,12 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
     };
   }, [lobbyId, navigate]);
 
-  const handlePuzzleComplete = async (puzzleId: string, solution: any) => {
-    if (solution && !completedPuzzles.includes(puzzleId)) {
-      const newCompletedPuzzles = [...completedPuzzles, puzzleId];
+  const handlePuzzleComplete = async (elementId: string, solution: any) => {
+    if (solution && !completedPuzzles.includes(elementId)) {
+      const newCompletedPuzzles = [...completedPuzzles, elementId];
       setCompletedPuzzles(newCompletedPuzzles);
       
-      // Save individual puzzle completion to database
+      // Save individual puzzle completion to database (use per-player map)
       if (lobbyId && playerId) {
         try {
           const { data: lobbyData } = await supabase
@@ -257,7 +260,10 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
             .single();
           
           if (lobbyData) {
-            const allCompletedPuzzles = (lobbyData.completed_puzzles as any) || {};
+            let allCompletedPuzzles: any = (lobbyData as any).completed_puzzles;
+            if (!allCompletedPuzzles || Array.isArray(allCompletedPuzzles)) {
+              allCompletedPuzzles = {};
+            }
             allCompletedPuzzles[playerId] = newCompletedPuzzles;
             
             await supabase
@@ -265,7 +271,7 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
               .update({ completed_puzzles: allCompletedPuzzles })
               .eq('id', lobbyId);
             
-            console.log(`✓ Puzzle ${puzzleId} saved to database for player ${playerId}`);
+            console.log(`✓ Element ${elementId} saved to database for player ${playerId}`);
           }
         } catch (error) {
           console.error('Error saving puzzle completion:', error);
@@ -273,8 +279,9 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
       }
       
       // Show success toast for individual puzzle
+      const element = config.elements.find(el => el.id === elementId);
       toast.success('✓ Mission Terminée !', {
-        description: `Puzzle "${puzzleId}" résolu avec succès`
+        description: `"${element?.name || elementId}" résolu avec succès`
       });
       
       // Check if all puzzles are now complete
@@ -329,7 +336,7 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
         setShowWaitingModal(true);
       }
     }
-    onPuzzleComplete(puzzleId, solution);
+    onPuzzleComplete(elementId, solution);
   };
 
   const handleReady = async () => {
@@ -634,8 +641,8 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
             <PuzzleModal
               puzzle={element.puzzle}
               isOpen={true}
-              onClose={() => handlePuzzleComplete(activePuzzle, null)}
-              onComplete={handlePuzzleComplete}
+              onClose={() => onPuzzleComplete(element.id, null)}
+              onComplete={(/* puzzleId */ _pid, solution) => handlePuzzleComplete(element.id, solution)}
             />
           );
         })()}
