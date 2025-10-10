@@ -200,6 +200,11 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
           totalViews: data.totalViews ?? data.total_views ?? 5000000,
           botThreshold: data.botThreshold ?? data.bot_percentage_threshold ?? 60,
         }
+      : componentName === 'ScheduleSabotagePuzzle'
+      ? {
+          posts: data.posts ?? [],
+          targetEngagementDrop: data.targetEngagementDrop ?? data.target_engagement_drop ?? 60,
+        }
       : {};
 
   const puzzleProps: any = {

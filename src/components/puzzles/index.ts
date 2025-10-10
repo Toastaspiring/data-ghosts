@@ -42,3 +42,4 @@ export { SevenDifferencesPuzzle } from './SevenDifferencesPuzzle';
 export { TikTokPuzzle } from './TikTokPuzzle';
 export { VideoTimecodePuzzle } from './VideoTimecodePuzzle';
 export { ActionPuzzle } from './ActionPuzzle';
+export { ScheduleSabotagePuzzle } from './ScheduleSabotagePuzzle';

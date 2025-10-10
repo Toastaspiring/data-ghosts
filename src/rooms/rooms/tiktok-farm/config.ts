@@ -572,37 +572,30 @@ export const tiktokFarmConfig: RoomConfig = {
       isUnlocked: true,
       isSolved: false,
       puzzle: {
-        id: 'view-analysis',
-        type: 'analysis',
+        id: 'schedule-sabotage',
+        type: 'temporal',
         difficulty: 3,
-        timeLimit: 200,
-        component: 'ViewAnalysisPuzzle',
+        timeLimit: 240,
+        component: 'ScheduleSabotagePuzzle',
         data: {
-          total_views: 5000000,
-          organic_indicators: {
-            watch_time_avg: 3,
-            engagement_rate: 0.02,
-            geographic_diversity: 0.15,
-            device_variety: 0.25
-          },
-          bot_indicators: {
-            watch_time_avg: 0.5,
-            engagement_rate: 0.001,
-            geographic_clustering: 0.95,
-            device_repetition: 0.85
-          },
-          bot_percentage_threshold: 60
+          posts: [
+            { id: 1, title: "Nouvelle collection été", currentTime: "21:00", audiencePeak: "21:00", engagement: 95 },
+            { id: 2, title: "Tuto makeup viral", currentTime: "18:00", audiencePeak: "18:00", engagement: 85 },
+            { id: 3, title: "Partenariat marque", currentTime: "12:00", audiencePeak: "12:00", engagement: 70 },
+            { id: 4, title: "Behind the scenes", currentTime: "09:00", audiencePeak: "09:00", engagement: 45 },
+          ],
+          target_engagement_drop: 60
         },
         validation: {
           type: 'custom',
-          validator: (analysis: any) => {
-            return analysis.bot_percentage >= 60;
+          validator: (posts: any[]) => {
+            return posts.length >= 4;
           }
         },
         hints: [
-          'Analysez les patterns de visionnage suspects.',
-          'Les bots ont des temps de visionnage très courts.',
-          'La diversité géographique faible indique des bots.'
+          'Regardez les heures de pic d\'activité de l\'audience.',
+          'Programmez les posts aux heures les plus creuses.',
+          'Visez une baisse moyenne de 60% d\'engagement.'
         ],
         rewards: []
       }
