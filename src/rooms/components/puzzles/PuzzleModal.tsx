@@ -195,6 +195,11 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
           requiredWords: data.requiredWords ?? data.required_words ?? [],
           targetCount: data.targetCount ?? data.target_count ?? 15,
         }
+      : componentName === 'ViewAnalysisPuzzle'
+      ? {
+          totalViews: data.totalViews ?? data.total_views ?? 5000000,
+          botThreshold: data.botThreshold ?? data.bot_percentage_threshold ?? 60,
+        }
       : {};
 
   const puzzleProps: any = {
