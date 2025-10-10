@@ -457,7 +457,7 @@ export const tiktokFarmConfig: RoomConfig = {
         id: 'algorithm-hack',
         type: 'code',
         difficulty: 3,
-        timeLimit: 600,
+        timeLimit: 240,
         component: 'AlgorithmPuzzle',
         data: {
           parameters: [
