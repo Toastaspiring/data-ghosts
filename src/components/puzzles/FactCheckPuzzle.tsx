@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +13,57 @@ interface FactCheckPuzzleProps {
 interface FactOption {
   text: string;
   isCorrect: boolean;
-  credibilityScore: number; // How believable it sounds (hidden)
+  credibilityScore: number;
   originalIndex?: number;
 }
+
+// Generate deceptive options for each false statement
+const generateOptionsForStatement = (falseIdx: number, correctFact: string): FactOption[] => {
+  // Generate plausible-sounding but incorrect alternatives
+  const deceptiveOptions: Record<number, string[]> = {
+    0: [ // Vaccins
+      "Les vaccins contiennent des traces de métaux qui peuvent affecter le cerveau",
+      "Les vaccins sont sûrs mais causent des effets secondaires à long terme",
+      "Les vaccins naturels sont plus efficaces que les vaccins chimiques"
+    ],
+    1: [ // Terre
+      "La Terre a une forme légèrement ovale selon les dernières études",
+      "La Terre est cylindrique selon des documents déclassifiés",
+      "La Terre est plate aux pôles mais ronde à l'équateur"
+    ],
+    2: [ // 5G
+      "Le 5G affaiblit le système immunitaire à long terme",
+      "Le 5G utilise des fréquences dangereuses selon certains experts",
+      "Le 5G nécessite plus de recherches avant d'être considéré sûr"
+    ],
+    3: [ // Chemtrails
+      "Les traînées contiennent des produits chimiques pour contrôler la météo",
+      "Les avions relâchent parfois des agents de géo-ingénierie",
+      "Les traînées persistent à cause de la pollution atmosphérique"
+    ]
+  };
+
+  const deceptive = deceptiveOptions[falseIdx] || [
+    "Cette affirmation est partiellement vraie",
+    "Des études récentes montrent des résultats mitigés",
+    "La vérité se trouve entre les deux positions"
+  ];
+
+  // Mix correct fact with deceptive ones
+  const options: FactOption[] = [
+    { text: correctFact, isCorrect: true, credibilityScore: 70 },
+    ...deceptive.map((text, idx) => ({ 
+      text, 
+      isCorrect: false, 
+      credibilityScore: 85 - (idx * 10)
+    }))
+  ];
+
+  // Shuffle but remember original positions
+  return options
+    .map((opt, idx) => ({ ...opt, originalIndex: idx }))
+    .sort(() => Math.random() - 0.5);
+};
 
 export const FactCheckPuzzle = ({ falseStatements, correctFacts, onSolve }: FactCheckPuzzleProps) => {
   const [corrections, setCorrections] = useState<Record<number, number>>({});
@@ -23,57 +71,12 @@ export const FactCheckPuzzle = ({ falseStatements, correctFacts, onSolve }: Fact
   const [showFeedback, setShowFeedback] = useState(false);
   const [hintsUsed, setHintsUsed] = useState<Set<number>>(new Set());
 
-  // Create deceptive options for each false statement
-  const generateOptionsForStatement = (falseIdx: number): FactOption[] => {
-    const correctFact = correctFacts[falseIdx];
-    
-    // Generate plausible-sounding but incorrect alternatives
-    const deceptiveOptions: Record<number, string[]> = {
-      0: [ // Vaccins
-        "Les vaccins contiennent des traces de métaux qui peuvent affecter le cerveau",
-        "Les vaccins sont sûrs mais causent des effets secondaires à long terme",
-        "Les vaccins naturels sont plus efficaces que les vaccins chimiques"
-      ],
-      1: [ // Terre
-        "La Terre a une forme légèrement ovale selon les dernières études",
-        "La Terre est cylindrique selon des documents déclassifiés",
-        "La Terre est plate aux pôles mais ronde à l'équateur"
-      ],
-      2: [ // 5G
-        "Le 5G affaiblit le système immunitaire à long terme",
-        "Le 5G utilise des fréquences dangereuses selon certains experts",
-        "Le 5G nécessite plus de recherches avant d'être considéré sûr"
-      ],
-      3: [ // Chemtrails
-        "Les traînées contiennent des produits chimiques pour contrôler la météo",
-        "Les avions relâchent parfois des agents de géo-ingénierie",
-        "Les traînées persistent à cause de la pollution atmosphérique"
-      ]
-    };
-
-    const deceptive = deceptiveOptions[falseIdx] || [
-      "Cette affirmation est partiellement vraie",
-      "Des études récentes montrent des résultats mitigés",
-      "La vérité se trouve entre les deux positions"
-    ];
-
-    // Mix correct fact with deceptive ones
-    const options: FactOption[] = [
-      { text: correctFact, isCorrect: true, credibilityScore: 70 },
-      ...deceptive.map((text, idx) => ({ 
-        text, 
-        isCorrect: false, 
-        credibilityScore: 85 - (idx * 10) // Deceptive ones sound MORE believable
-      }))
-    ];
-
-    // Shuffle but remember original positions
-    return options
-      .map((opt, idx) => ({ ...opt, originalIndex: idx }))
-      .sort(() => Math.random() - 0.5);
-  };
-
-  const allOptions = falseStatements.map((_, idx) => generateOptionsForStatement(idx));
+  // Memoize options generation to prevent re-shuffling on each render
+  const allOptions = useMemo(() => {
+    return falseStatements.map((_, idx) => 
+      generateOptionsForStatement(idx, correctFacts[idx] || "")
+    );
+  }, [falseStatements, correctFacts]);
 
   const toggleCorrection = (falseIdx: number, optionIdx: number) => {
     if (submitted) return;
@@ -98,8 +101,11 @@ export const FactCheckPuzzle = ({ falseStatements, correctFacts, onSolve }: Fact
   const calculateScore = () => {
     let correct = 0;
     Object.entries(corrections).forEach(([falseIdx, optionIdx]) => {
-      const option = allOptions[Number(falseIdx)][optionIdx];
-      if (option.isCorrect) correct++;
+      const options = allOptions[Number(falseIdx)];
+      if (options && options[optionIdx]) {
+        const option = options[optionIdx];
+        if (option.isCorrect) correct++;
+      }
     });
     return correct;
   };
@@ -153,8 +159,13 @@ export const FactCheckPuzzle = ({ falseStatements, correctFacts, onSolve }: Fact
           const options = allOptions[falseIdx];
           const isHintUsed = hintsUsed.has(falseIdx);
           
+          // Safety check: if options are not generated yet, skip rendering
+          if (!options || options.length === 0) {
+            return null;
+          }
+          
           let selectedOption: FactOption | undefined;
-          if (hasCorrection) {
+          if (hasCorrection && options[selectedOptionIdx]) {
             selectedOption = options[selectedOptionIdx];
           }
 
