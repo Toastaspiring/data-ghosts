@@ -158,24 +158,7 @@ src/rooms/
 - [ ] Implement specific puzzle types
 - [ ] Add puzzle validation and scoring
 
-### Phase 4: Room Implementation (Days 7-9)
-- [ ] **Day 7: Bali Marine Room**
-  - Configure room layout and elements
-  - Implement room-specific components
-  - Create coral analysis puzzles
-  - Test room functionality
-- [ ] **Day 8: Santorini Archaeological Room**
-  - Configure ancient civilization theme
-  - Implement archaeological tools
-  - Create pottery/dating puzzles
-  - Test room functionality
-- [ ] **Day 9: Machu Picchu Conservation Room**
-  - Configure mountain laboratory theme
-  - Implement conservation equipment
-  - Create botanical/soil puzzles
-  - Test room functionality
-
-### Phase 5: Integration & Polish (Days 10-11)
+### Phase 4: Integration & Polish (Days 10-11)
 - [ ] Integrate rooms with game manager
 - [ ] Implement cross-room collaboration
 - [ ] Add save/load functionality
