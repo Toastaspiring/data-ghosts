@@ -88,7 +88,7 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
     }
   };
 
-  // Handle submission
+  // Handle submission - Not used in most puzzles since they call onComplete directly
   const handleSubmit = async () => {
     if (!solution) return;
     
@@ -100,14 +100,14 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
       const isValid = validateSolution(solution);
       
       if (isValid) {
-        onComplete(puzzle.id, solution);
+        onComplete(puzzle.id, { solved: true, solution });
         onClose();
       } else {
         setAttempts(prev => prev + 1);
         setError('Incorrect solution. Please try again.');
         
         // Check if max attempts reached
-        if (puzzle.validation.attempts && attempts + 1 >= puzzle.validation.attempts) {
+        if (puzzle.validation?.attempts && attempts + 1 >= puzzle.validation.attempts) {
           setError('Maximum attempts reached. Puzzle failed.');
           setTimeout(() => onClose(), 2000);
         }
@@ -121,6 +121,8 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
 
   // Validate solution (simplified - would be more complex in real implementation)
   const validateSolution = (userSolution: any): boolean => {
+    if (!puzzle.validation) return true; // If no validation defined, accept
+    
     const { validation } = puzzle;
     
     switch (validation.type) {
@@ -141,7 +143,7 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
         }
         return false;
       default:
-        return false;
+        return true; // Accept if validation type unknown
     }
   };
 
