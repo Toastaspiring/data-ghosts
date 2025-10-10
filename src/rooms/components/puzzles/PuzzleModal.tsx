@@ -192,8 +192,8 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
         }
       : componentName === 'CommentPuzzle'
       ? {
-          templates: data.templates ?? data.negative_templates ?? [],
-          targetCount: data.targetCount ?? data.target_count ?? 50,
+          requiredWords: data.requiredWords ?? data.required_words ?? [],
+          targetCount: data.targetCount ?? data.target_count ?? 15,
         }
       : {};
 

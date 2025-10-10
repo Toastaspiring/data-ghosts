@@ -518,30 +518,34 @@ export const tiktokFarmConfig: RoomConfig = {
       puzzle: {
         id: 'comment-flood',
         type: 'pattern',
-        difficulty: 2,
-        timeLimit: 180,
+        difficulty: 3,
+        timeLimit: 300,
         component: 'CommentPuzzle',
         data: {
-          negative_templates: [
-            'C\'est clairement fake',
-            'Les éclairages sont suspects',
-            'On voit le green screen',
-            'Arrêtez de nous mentir',
-            'Publi déguisée'
+          required_words: [
+            'fake',
+            'mensonge',
+            'arnaque',
+            'manipulation',
+            'publicité',
+            'green screen',
+            'montage',
+            'truqué',
+            'déçu',
+            'boycott'
           ],
-          target_count: 50,
-          variations_needed: 10
+          target_count: 15,
         },
         validation: {
           type: 'custom',
           validator: (comments: string[]) => {
-            return comments.length >= 50;
+            return comments.length >= 15;
           }
         },
         hints: [
-          'Utilisez les templates de commentaires négatifs.',
-          'Variez les formulations pour paraître authentique.',
-          'Visez au moins 50 commentaires négatifs.'
+          'Vous devez utiliser TOUS les mots requis dans vos commentaires.',
+          'Écrivez au moins 15 commentaires négatifs crédibles.',
+          'Les mots peuvent être utilisés dans différents commentaires.'
         ],
         rewards: []
       }

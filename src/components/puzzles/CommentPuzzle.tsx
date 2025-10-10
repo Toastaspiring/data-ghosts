@@ -2,47 +2,48 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Copy } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageSquare, Check, X } from "lucide-react";
 
 interface CommentPuzzleProps {
-  templates: string[];
+  requiredWords: string[];
   targetCount: number;
   onSolve: () => void;
 }
 
-export const CommentPuzzle = ({ templates, targetCount, onSolve }: CommentPuzzleProps) => {
+export const CommentPuzzle = ({ requiredWords, targetCount, onSolve }: CommentPuzzleProps) => {
   const [comments, setComments] = useState<string[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState(0);
-  const [templateCounts, setTemplateCounts] = useState<Record<number, number>>({});
-  const [credibilityScore, setCredibilityScore] = useState(100);
-  const [showWarning, setShowWarning] = useState(false);
+  const [currentComment, setCurrentComment] = useState("");
+  const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
 
-  const variations = [
-    "", "!!!", "???", " 😂", " 🤡", " smh", " fr fr", " no cap"
-  ];
-
-  const generateComment = () => {
-    const template = templates[selectedTemplate];
-    const variation = variations[Math.floor(Math.random() * variations.length)];
-    const newComment = template + variation;
-    setComments([...comments, newComment]);
-  };
-
-  const generateBatch = () => {
-    const newComments = [];
-    for (let i = 0; i < 10; i++) {
-      const template = templates[Math.floor(Math.random() * templates.length)];
-      const variation = variations[Math.floor(Math.random() * variations.length)];
-      newComments.push(template + variation);
-    }
-    setComments([...comments, ...newComments]);
+  const addComment = () => {
+    if (currentComment.trim().length < 5) return;
+    
+    const newComments = [...comments, currentComment.trim()];
+    setComments(newComments);
+    
+    // Update used words
+    const allText = newComments.join(" ").toLowerCase();
+    const newUsedWords = new Set<string>();
+    requiredWords.forEach(word => {
+      if (allText.includes(word.toLowerCase())) {
+        newUsedWords.add(word);
+      }
+    });
+    setUsedWords(newUsedWords);
+    
+    setCurrentComment("");
   };
 
   const handleSubmit = () => {
-    if (comments.length >= targetCount && credibilityScore >= 60) {
+    const allWordsUsed = requiredWords.every(word => usedWords.has(word));
+    if (comments.length >= targetCount && allWordsUsed) {
       onSolve();
     }
   };
+
+  const isWordUsed = (word: string) => usedWords.has(word);
+  const allWordsUsed = requiredWords.every(word => usedWords.has(word));
 
   return (
     <div className="space-y-6 p-6">
@@ -52,45 +53,58 @@ export const CommentPuzzle = ({ templates, targetCount, onSolve }: CommentPuzzle
           Gestion des Commentaires
         </h2>
         <p className="text-muted-foreground">
-          Générez {targetCount} commentaires négatifs pour ruiner leur réputation
+          Écrivez {targetCount} commentaires négatifs en utilisant TOUS les mots requis
         </p>
-        <Badge variant={comments.length >= targetCount ? "default" : "secondary"}>
-          Commentaires: {comments.length}/{targetCount}
-        </Badge>
+        <div className="flex gap-2 justify-center">
+          <Badge variant={comments.length >= targetCount ? "default" : "secondary"}>
+            Commentaires: {comments.length}/{targetCount}
+          </Badge>
+          <Badge variant={allWordsUsed ? "default" : "destructive"}>
+            Mots: {usedWords.size}/{requiredWords.length}
+          </Badge>
+        </div>
       </div>
 
-      <Card className="p-4 space-y-3">
-        <h3 className="font-bold">Templates de Commentaires</h3>
-        <div className="grid gap-2">
-          {templates.map((template, idx) => (
-            <Button
+      <Card className="p-4 space-y-3 bg-accent/10 border-accent/30">
+        <h3 className="font-bold text-accent">Mots Requis (à utiliser TOUS)</h3>
+        <div className="flex flex-wrap gap-2">
+          {requiredWords.map((word, idx) => (
+            <Badge
               key={idx}
-              variant={selectedTemplate === idx ? "default" : "outline"}
-              onClick={() => setSelectedTemplate(idx)}
-              className="justify-start text-left h-auto py-2"
+              variant={isWordUsed(word) ? "default" : "outline"}
+              className="text-sm"
             >
-              {template}
-            </Button>
+              {isWordUsed(word) ? <Check className="w-3 h-3 mr-1" /> : <X className="w-3 h-3 mr-1" />}
+              {word}
+            </Badge>
           ))}
         </div>
       </Card>
 
-      <div className="flex gap-2">
-        <Button onClick={generateComment} className="flex-1">
-          <Copy className="w-4 h-4 mr-2" />
-          Générer 1
+      <Card className="p-4 space-y-3">
+        <h3 className="font-bold">Écrire un Commentaire</h3>
+        <Textarea
+          value={currentComment}
+          onChange={(e) => setCurrentComment(e.target.value)}
+          placeholder="Écrivez un commentaire négatif utilisant les mots requis..."
+          className="min-h-24"
+          maxLength={300}
+        />
+        <Button 
+          onClick={addComment} 
+          disabled={currentComment.trim().length < 5}
+          className="w-full"
+        >
+          Ajouter Commentaire
         </Button>
-        <Button onClick={generateBatch} variant="secondary" className="flex-1">
-          Générer x10
-        </Button>
-      </div>
+      </Card>
 
       <Card className="p-4 bg-muted/50 max-h-60 overflow-y-auto">
         <h3 className="font-bold mb-3 sticky top-0 bg-muted/95 pb-2">
-          Commentaires Générés ({comments.length})
+          Commentaires Écrits ({comments.length})
         </h3>
         <div className="space-y-2">
-          {comments.slice(-20).map((comment, idx) => (
+          {comments.map((comment, idx) => (
             <div key={idx} className="p-2 bg-card rounded text-sm border border-border">
               💬 {comment}
             </div>
@@ -100,11 +114,12 @@ export const CommentPuzzle = ({ templates, targetCount, onSolve }: CommentPuzzle
 
       <Button
         onClick={handleSubmit}
-        disabled={comments.length < targetCount}
+        disabled={comments.length < targetCount || !allWordsUsed}
         className="w-full"
         size="lg"
       >
-        Publier {comments.length} Commentaires Négatifs
+        Publier {comments.length} Commentaires
+        {!allWordsUsed && " (Mots manquants!)"}
       </Button>
     </div>
   );
