@@ -15,6 +15,9 @@ import {
   RotateCcw
 } from 'lucide-react';
 
+// Import all puzzle components
+import * as PuzzleComponents from '@/components/puzzles';
+
 interface PuzzleModalProps {
   puzzle: PuzzleConfig;
   isOpen: boolean;
@@ -155,6 +158,40 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
   // Check if time limit exceeded
   const isTimeUp = puzzle.timeLimit && timeElapsed >= puzzle.timeLimit;
 
+  // Render the appropriate puzzle component
+  const renderPuzzleComponent = () => {
+    const componentName = puzzle.component;
+    const PuzzleComponent = (PuzzleComponents as any)[componentName];
+
+    if (!PuzzleComponent) {
+      return (
+        <div className="p-6 bg-background/50 backdrop-blur-sm rounded-md border border-primary/20">
+          <div className="text-center space-y-4">
+            <AlertCircle className="w-16 h-16 text-yellow-400 mx-auto" />
+            <h3 className="text-lg font-semibold">Puzzle Component Not Found</h3>
+            <p className="text-muted-foreground">
+              Component "{componentName}" is not implemented yet.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Puzzle Type: {puzzle.type}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Map puzzle data to component props
+    const puzzleProps: any = {
+      ...puzzle.data,
+      onSolve: () => {
+        onComplete(puzzle.id, { solved: true });
+        onClose();
+      },
+    };
+
+    return <PuzzleComponent {...puzzleProps} />;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
@@ -242,18 +279,9 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
             </div>
           )}
 
-          {/* Puzzle Component Placeholder */}
-          <div className="min-h-[300px] p-6 bg-background/50 backdrop-blur-sm rounded-md border border-primary/20">
-            <div className="text-center space-y-4">
-              <Target className="w-16 h-16 text-primary mx-auto" />
-              <h3 className="text-lg font-semibold">Puzzle Component</h3>
-              <p className="text-muted-foreground">
-                This is where the specific puzzle component for "{puzzle.type}" would be rendered.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Puzzle data: {JSON.stringify(puzzle.data, null, 2)}
-              </p>
-            </div>
+          {/* Puzzle Component */}
+          <div className="min-h-[300px]">
+            {renderPuzzleComponent()}
           </div>
         </div>
 
