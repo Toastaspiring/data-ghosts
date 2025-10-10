@@ -86,41 +86,15 @@ export const AudioVisualizer = ({
   }, []); // Run once on mount
 
   const scanForPlayingAudio = () => {
-    console.log("🔍 Scanning for playing audio...");
-    
-    // Check if audio is unlocked
-    const isUnlocked = audioManager.getIsUnlocked();
     const audioContext = audioManager.getAudioContext();
-    console.log("🔓 Audio unlocked:", isUnlocked);
-    console.log("🎧 Audio context state:", audioContext?.state);
     
-    // Try to unlock if not unlocked yet - be more aggressive
-    if (!isUnlocked) {
-      console.log("❌ Audio not unlocked yet, attempting to unlock...");
-      try {
-        audioManager.unlockAudio();
-        console.log("🔓 Called audio unlock, retrying scan in 300ms...");
-        setTimeout(scanForPlayingAudio, 300);
-      } catch (error) {
-        console.log("❌ Failed to unlock audio:", error);
-        // Keep trying every second
-        setTimeout(scanForPlayingAudio, 1000);
-      }
-      return;
-    }
-    
-    // Check if audio context is suspended (happens when navigating away)
+    // Check if audio context is suspended
     if (audioContext && audioContext.state === 'suspended') {
-      console.log("⏸️ Audio context is suspended, attempting to resume...");
-      audioContext.resume().then(() => {
-        console.log("▶️ Audio context resumed successfully");
-        // Try scanning again after resuming
-        setTimeout(scanForPlayingAudio, 200);
-      }).catch(error => {
-        console.log("❌ Failed to resume audio context:", error);
-        // Keep trying
-        setTimeout(scanForPlayingAudio, 1000);
+      // Try to resume, but don't block if it fails
+      audioContext.resume().catch(() => {
+        // Silent fail - we'll try again later
       });
+      setTimeout(scanForPlayingAudio, 1000);
       return;
     }
 
@@ -162,18 +136,15 @@ export const AudioVisualizer = ({
     // Don't depend on isAudioUnlocked state, always monitor
     const checkMusicChange = setInterval(() => {
       const currentMusic = audioManager.getBackgroundMusic();
-      const isUnlocked = audioManager.getIsUnlocked();
       
       // If we have music but aren't connected, try to connect
-      if (currentMusic && !isConnected && isUnlocked) {
-        console.log("Found background music, attempting to connect");
+      if (currentMusic && !isConnected) {
         connectToAudio();
         return;
       }
       
       // If music changed, reconnect
-      if (currentMusic !== lastMusicRef.current && currentMusic && isUnlocked) {
-        console.log("Background music changed, reconnecting visualizer");
+      if (currentMusic !== lastMusicRef.current && currentMusic) {
         lastMusicRef.current = currentMusic;
         setIsConnected(false);
         if (animationRef.current) {
@@ -183,12 +154,6 @@ export const AudioVisualizer = ({
         
         // Reconnect after a short delay
         setTimeout(connectToAudio, 300);
-      }
-      
-      // If not unlocked, keep trying to unlock
-      if (!isUnlocked && currentMusic) {
-        console.log("🔄 Music available but audio not unlocked, attempting unlock...");
-        audioManager.unlockAudio();
       }
     }, 500); // Check more frequently
 
@@ -205,13 +170,10 @@ export const AudioVisualizer = ({
   }, []);
 
   const connectToAudio = () => {
-    console.log("🔌 Attempting to connect to audio...");
-    
     try {
       // Clean up any existing connection first
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
-        console.log("🧹 Cancelled existing animation frame");
       }
       analyserRef.current = null;
       setIsConnected(false);
@@ -221,10 +183,7 @@ export const AudioVisualizer = ({
       const backgroundMusic = audioManager.getBackgroundMusic();
       const existingMediaSource = audioManager.getMediaSource();
 
-      console.log("📊 Connection attempt - Context:", !!audioContext, "Music:", !!backgroundMusic, "MediaSource:", !!existingMediaSource);
-
       if (!audioContext || !backgroundMusic) {
-        console.log("❌ Missing audio context or background music, retrying in 1 second...");
         setTimeout(connectToAudio, 1000);
         return;
       }

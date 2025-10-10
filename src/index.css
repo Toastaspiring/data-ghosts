@@ -10,8 +10,59 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  @keyframes tremble {
+    0% { transform: translate(0); }
+    10% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+    20% { transform: translate(-1px, 2px) rotate(0.5deg); }
+    30% { transform: translate(2px, 1px) rotate(0deg); }
+    40% { transform: translate(-1px, -1px) rotate(0.5deg); }
+    50% { transform: translate(-2px, 2px) rotate(-0.5deg); }
+    60% { transform: translate(2px, -1px) rotate(0deg); }
+    70% { transform: translate(-2px, 1px) rotate(-0.5deg); }
+    80% { transform: translate(-1px, -2px) rotate(0.5deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes tremble-intense {
+    0% { transform: translate(0); }
+    10% { transform: translate(-4px, -2px) rotate(-1deg); }
+    20% { transform: translate(-2px, 4px) rotate(1deg); }
+    30% { transform: translate(4px, 2px) rotate(0deg); }
+    40% { transform: translate(-2px, -2px) rotate(1deg); }
+    50% { transform: translate(-4px, 4px) rotate(-1deg); }
+    60% { transform: translate(4px, -2px) rotate(0deg); }
+    70% { transform: translate(-4px, 2px) rotate(-1deg); }
+    80% { transform: translate(-2px, -4px) rotate(1deg); }
+    90% { transform: translate(2px, 4px) rotate(0deg); }
+    100% { transform: translate(0); }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+  }
+
+  .animate-tremble {
+    animation: tremble 0.1s infinite;
+  }
+
+  .animate-tremble-intense {
+    animation: tremble-intense 0.08s infinite;
+  }
+
+  /* Global trembling effect for destruction */
+  .trembling-everything * {
+    animation: tremble 0.1s infinite;
+  }
+
+  .trembling-everything .card,
+  .trembling-everything .button,
+  .trembling-everything .text {
+    animation: tremble-intense 0.08s infinite;
+  }
+
+  /* Data Ghosts Theme */
   :root {
-    /* Cyberpunk Dark Theme - Data Ghosts */
     --background: 220 15% 8%;
     --foreground: 180 100% 90%;
 

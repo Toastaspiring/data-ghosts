@@ -187,20 +187,9 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
             if (allCompleted && allReady && status.length > 0) {
               toast.success('🚀 Toute l\'équipe est prête !');
               
-              // Update player assignments to point to final room
-              const playerAssignments = newData.player_assignments || {};
-              const updatedAssignments: any = {};
-              Object.keys(playerAssignments).forEach(pid => {
-                updatedAssignments[pid] = 5; // final-destruction is room 5
-              });
-
-              supabase
-                .from('lobbies')
-                .update({ player_assignments: updatedAssignments })
-                .eq('id', lobbyId);
-
+              // Navigate to final destruction instead of assigning room 5
               setTimeout(() => {
-                window.location.href = `/game/${lobbyId}`;
+                window.location.href = `/final-destruction/${lobbyId}`;
               }, 2000);
             }
           }

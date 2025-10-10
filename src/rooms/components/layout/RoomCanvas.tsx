@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { InteractionType, LayoutConfig, ElementConfig, RoomState } from '../../core/types';
-import { InteractiveElement } from '../elements/InteractiveElement';
+import { InteractiveElement } from '../elements';
 import { cn } from '@/lib/utils';
 
 interface RoomCanvasProps {

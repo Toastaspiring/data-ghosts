@@ -17,6 +17,7 @@ export const GlobalAudioVisualizer = ({ children }: GlobalAudioVisualizerProps) 
     '/lobby',      // Waiting room and beyond
     '/room-selection',
     '/game',
+    '/final-destruction',  // Final destruction page
     '/leaderboard'
   ];
 

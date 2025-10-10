@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { AudioButton } from "@/components/ui/AudioButton";
 import { audioManager } from "@/lib/audioManager";
 import { useAudio } from "@/hooks/useAudio";
+import { useAudioManager } from "@/hooks/useAudioManager";
 import { useGameStats } from "@/hooks/useGameStats";
 
 const Index = () => {
@@ -12,8 +13,10 @@ const Index = () => {
   const [typedText, setTypedText] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [typingStarted, setTypingStarted] = useState(false);
   const fullText = "Data Ghosts";
   const { playSound } = useAudio();
+  const { playMusicFromUrl, isAudioUnlocked } = useAudioManager();
   const typingAudioRef = useRef<HTMLAudioElement | null>(null);
   const { stats } = useGameStats();
 
@@ -32,62 +35,88 @@ const Index = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Add audio reactivation handler
+  // Initialize background music
   useEffect(() => {
-    // Add a click handler to reactivate audio if needed
-    const handlePageClick = () => {
-      console.log("📱 Page clicked, checking audio state...");
-      
-      const isUnlocked = audioManager.getIsUnlocked();
-      const audioContext = audioManager.getAudioContext();
-      
-      console.log("🔓 Audio unlocked:", isUnlocked);
-      console.log("🎧 Audio context state:", audioContext?.state);
-      
-      if (!isUnlocked || (audioContext && audioContext.state === 'suspended')) {
-        console.log("🔄 Attempting to reactivate audio...");
-        audioManager.unlockAudio();
-      }
-    };
+    // Simply try to play music - the audioManager will handle permission requests
+    playMusicFromUrl('/sounds/landing-cyberpunk.mp3');
+  }, [playMusicFromUrl]);
 
-    // Add click listener to reactivate audio
-    document.addEventListener('click', handlePageClick, { once: true });
-    
-    return () => {
-      document.removeEventListener('click', handlePageClick);
-    };
-  }, []);
-
+  // Typing animation effect - wait for audio permission
   useEffect(() => {
-    let index = 0;
-    // Start typing sound
-    typingAudioRef.current = new Audio("/sounds/keyboard.wav");
-    typingAudioRef.current.loop = true;
-    typingAudioRef.current.volume = 0.5;
-    typingAudioRef.current.play().catch(() => {});
+    // Don't start typing until we have user's audio permission choice
+    if (typingStarted) return;
     
-    const timer = setInterval(() => {
-      if (index <= fullText.length) {
-        setTypedText(fullText.slice(0, index));
-        index++;
-      } else {
-        clearInterval(timer);
-        // Stop typing sound
-        if (typingAudioRef.current) {
-          typingAudioRef.current.pause();
-          typingAudioRef.current.currentTime = 0;
+    // Wait a bit for the audio permission modal to appear/be handled
+    const checkAudioAndStartTyping = () => {
+      if (isAudioUnlocked !== null) { // User has made a choice about audio
+        setTypingStarted(true);
+        
+        let index = 0;
+        // Start typing sound only if audio is unlocked
+        if (isAudioUnlocked) {
+          typingAudioRef.current = new Audio("/sounds/keyboard.wav");
+          typingAudioRef.current.loop = true;
+          typingAudioRef.current.volume = 0.5;
+          typingAudioRef.current.play().catch(() => {});
         }
+        
+        const timer = setInterval(() => {
+          if (index <= fullText.length) {
+            setTypedText(fullText.slice(0, index));
+            index++;
+          } else {
+            clearInterval(timer);
+            // Stop typing sound
+            if (typingAudioRef.current) {
+              typingAudioRef.current.pause();
+              typingAudioRef.current.currentTime = 0;
+            }
+          }
+        }, 150);
+
+        return () => {
+          clearInterval(timer);
+          if (typingAudioRef.current) {
+            typingAudioRef.current.pause();
+            typingAudioRef.current.currentTime = 0;
+          }
+        };
       }
-    }, 150);
+    };
+
+    // Check immediately or wait for audio decision
+    const checkTimer = setInterval(() => {
+      if (isAudioUnlocked !== null) {
+        checkAudioAndStartTyping();
+        clearInterval(checkTimer);
+      }
+    }, 100);
+
+    // Fallback: start typing after 3 seconds even without audio decision
+    const fallbackTimer = setTimeout(() => {
+      if (!typingStarted) {
+        setTypingStarted(true);
+        let index = 0;
+        const timer = setInterval(() => {
+          if (index <= fullText.length) {
+            setTypedText(fullText.slice(0, index));
+            index++;
+          } else {
+            clearInterval(timer);
+          }
+        }, 150);
+      }
+    }, 3000);
 
     return () => {
-      clearInterval(timer);
+      clearInterval(checkTimer);
+      clearTimeout(fallbackTimer);
       if (typingAudioRef.current) {
         typingAudioRef.current.pause();
         typingAudioRef.current.currentTime = 0;
       }
     };
-  }, []);
+  }, [isAudioUnlocked, typingStarted]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">      

@@ -192,7 +192,10 @@ const Lobby = () => {
     const { error } = await supabase
       .from("lobbies")
       .update({ 
-        game_state: { phase: "room_selection" }
+        game_state: { 
+          phase: "room_selection",
+          game_start_time: new Date().toISOString()
+        }
       })
       .eq("id", lobby.id);
 

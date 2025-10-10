@@ -1,6 +1,7 @@
 import { AUDIO_CONFIG, BACKGROUND_MUSIC, BackgroundMusic } from "@/config/sounds";
 
 type Listener = (isUnlocked: boolean) => void;
+type PermissionCallback = (showPrompt: boolean) => void;
 
 class AudioManager {
   private static instance: AudioManager;
@@ -10,33 +11,13 @@ class AudioManager {
   private isUnlocked = false;
   private musicQueue: BackgroundMusic | null = null;
   private listeners: Listener[] = [];
+  private permissionCallbacks: PermissionCallback[] = [];
+  private userDeniedAudio = false;
+  private permissionRequested = false;
 
   private constructor() {
     // Private constructor for singleton pattern
-    // Auto-unlock audio on page load
-    this.attemptAutoUnlock();
-  }
-
-  private attemptAutoUnlock() {
-    // Try to unlock audio automatically when the page loads
-    try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      this.isUnlocked = true;
-      console.log("🔓 Auto-unlock successful, audio context created");
-      this.notifyListeners();
-    } catch (error) {
-      console.log("❌ Auto-unlock failed, will need user interaction:", error);
-      // Set up a one-time click listener to unlock audio
-      const unlockOnClick = () => {
-        console.log("👆 User clicked, attempting to unlock audio...");
-        this.unlockAudio();
-        document.removeEventListener('click', unlockOnClick);
-        document.removeEventListener('touchstart', unlockOnClick);
-      };
-      
-      document.addEventListener('click', unlockOnClick);
-      document.addEventListener('touchstart', unlockOnClick);
-    }
+    // Always start fresh on page load - let modal show every time
   }
 
   public static getInstance(): AudioManager {
@@ -54,6 +35,51 @@ class AudioManager {
 
   public getMediaSource = () => this.mediaSource;
 
+  public getUserDeniedAudio = () => this.userDeniedAudio;
+
+  public addPermissionCallback(callback: PermissionCallback) {
+    this.permissionCallbacks.push(callback);
+  }
+
+  public removePermissionCallback(callback: PermissionCallback) {
+    this.permissionCallbacks = this.permissionCallbacks.filter(c => c !== callback);
+  }
+
+  private notifyPermissionCallbacks(showPrompt: boolean) {
+    for (const callback of this.permissionCallbacks) {
+      callback(showPrompt);
+    }
+  }
+
+  public requestAudioPermission() {
+    if (this.isUnlocked || this.userDeniedAudio || this.permissionRequested) {
+      return;
+    }
+    
+    this.permissionRequested = true;
+    this.notifyPermissionCallbacks(true);
+  }
+
+  public forceShowPermissionModal() {
+    // Force show modal unconditionally on page load
+    this.permissionRequested = true;
+    this.notifyPermissionCallbacks(true);
+  }
+
+  public grantAudioPermission() {
+    this.userDeniedAudio = false;
+    this.unlockAudio();
+    this.notifyPermissionCallbacks(false);
+    // Don't save to session storage - always ask on refresh
+  }
+
+  public denyAudioPermission() {
+    this.userDeniedAudio = true;
+    this.permissionRequested = true;
+    this.notifyPermissionCallbacks(false);
+    // Don't save to session storage - always ask on refresh
+  }
+
   public addListener(listener: Listener) {
     this.listeners.push(listener);
     listener(this.isUnlocked);
@@ -70,49 +96,67 @@ class AudioManager {
   }
 
   public unlockAudio() {
-    if (this.isUnlocked) {
+    if (this.isUnlocked && this.audioContext) {
       // If already unlocked, just resume the audio context if suspended
-      if (this.audioContext && this.audioContext.state === 'suspended') {
+      if (this.audioContext.state === 'suspended') {
         this.audioContext.resume();
       }
       return;
     }
     
-    this.isUnlocked = true;
-    
-    // Create audio context if we don't have one
-    if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
+    try {
+      // Create audio context if we don't have one
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      // Resume if suspended
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+      
+      // Play a silent sound to truly unlock audio
+      const buffer = this.audioContext.createBuffer(1, 1, 22050);
+      const source = this.audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(this.audioContext.destination);
+      source.start();
+      
+      this.isUnlocked = true;
 
-    if (this.musicQueue) {
-      this.playMusic(this.musicQueue);
-      this.musicQueue = null;
+      if (this.musicQueue) {
+        this.playMusic(this.musicQueue);
+        this.musicQueue = null;
+      }
+      this.notifyListeners();
+    } catch (error) {
+      // If we still can't unlock, just fail silently
+      // The permission modal should handle this
     }
-    this.notifyListeners();
   }
 
   public playMusic(musicKey: BackgroundMusic) {
-    console.log("🎵 playMusic called with:", musicKey, "unlocked:", this.isUnlocked);
-    
+    // If user denied audio, don't play
+    if (this.userDeniedAudio) {
+      return;
+    }
+
+    // If not unlocked, request permission
     if (!this.isUnlocked) {
-      console.log("🔒 Audio not unlocked, queueing music");
       this.musicQueue = musicKey;
+      this.requestAudioPermission();
       return;
     }
 
     // Resume audio context if it's suspended
     if (this.audioContext && this.audioContext.state === 'suspended') {
-      console.log("⏸️ Audio context suspended, resuming...");
       this.audioContext.resume().then(() => {
-        console.log("▶️ Audio context resumed, continuing with music");
         this.playMusic(musicKey); // Retry after resuming
       });
       return;
     }
 
     if (this.backgroundMusic && this.backgroundMusic.src.includes(BACKGROUND_MUSIC[musicKey])) {
-      console.log("🎶 Music already playing:", musicKey);
       return;
     }
 
@@ -171,21 +215,20 @@ class AudioManager {
   }
 
   public playMusicFromUrl(musicUrl: string) {
-    console.log("🎵 playMusicFromUrl called with:", musicUrl, "unlocked:", this.isUnlocked);
+    // If user denied audio, don't play
+    if (this.userDeniedAudio) {
+      return;
+    }
     
     if (!this.isUnlocked) {
-      console.log("🔒 Audio not unlocked, cannot play direct URL music");
-      this.unlockAudio(); // Try to unlock audio
-      if (!this.isUnlocked) {
-        return; // Still not unlocked, give up
-      }
+      // Request permission instead of trying to auto-unlock
+      this.requestAudioPermission();
+      return;
     }
 
     // Resume audio context if it's suspended
     if (this.audioContext && this.audioContext.state === 'suspended') {
-      console.log("⏸️ Audio context suspended, resuming...");
       this.audioContext.resume().then(() => {
-        console.log("▶️ Audio context resumed, continuing with music");
         this.playMusicFromUrl(musicUrl); // Retry after resuming
       });
       return;

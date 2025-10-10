@@ -10,37 +10,26 @@ import JoinLobby from "./pages/JoinLobby";
 import Lobby from "./pages/Lobby";
 import RoomSelection from "./pages/RoomSelection";
 import Game from "./pages/Game";
+import FinalDestruction from "./pages/FinalDestruction";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 import { audioManager } from "./lib/audioManager";
 import { GlobalAudioVisualizer } from "./components/GlobalAudioVisualizer";
+import { AudioPermissionModal } from "./components/ui/AudioPermissionModal";
+import { useAudioPermission } from "./hooks/useAudioPermission";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const { showPermissionModal, grantPermission, denyPermission } = useAudioPermission();
+
   useEffect(() => {
-    // Immediately try to unlock audio when app loads
-    console.log("🚀 App mounted, attempting immediate audio unlock...");
-    audioManager.unlockAudio();
-    
-    // Set up additional interaction listeners as fallback
-    const handleInteraction = (event: Event) => {
-      console.log(`🎯 App-level interaction: ${event.type}`);
-      audioManager.unlockAudio();
-    };
+    // Show audio permission modal on every page load
+    const timer = setTimeout(() => {
+      audioManager.forceShowPermissionModal();
+    }, 1000); // 1 second after page load
 
-    // Listen to various interaction events
-    const events = ['click', 'keydown', 'touchstart', 'mousedown'];
-    events.forEach(event => {
-      window.addEventListener(event, handleInteraction, { once: true, passive: true });
-    });
-
-    // Cleanup function
-    return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, handleInteraction);
-      });
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -48,6 +37,11 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <AudioPermissionModal 
+          isOpen={showPermissionModal}
+          onAllow={grantPermission}
+          onDeny={denyPermission}
+        />
         <BrowserRouter>
           <GlobalAudioVisualizer>
             <Routes>
@@ -57,6 +51,7 @@ const App = () => {
               <Route path="/lobby/:lobbyId" element={<Lobby />} />
               <Route path="/room-selection/:lobbyId" element={<RoomSelection />} />
               <Route path="/game/:lobbyId" element={<Game />} />
+              <Route path="/final-destruction/:lobbyId" element={<FinalDestruction />} />
               <Route path="/leaderboard/:lobbyId" element={<Leaderboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
