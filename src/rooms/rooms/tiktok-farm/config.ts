@@ -584,7 +584,7 @@ export const tiktokFarmConfig: RoomConfig = {
             { id: 3, title: "Partenariat marque", currentTime: "12:00", audiencePeak: "12:00", engagement: 70 },
             { id: 4, title: "Behind the scenes", currentTime: "09:00", audiencePeak: "09:00", engagement: 45 },
           ],
-          target_engagement_drop: 60
+          target_engagement_drop: 50
         },
         validation: {
           type: 'custom',
