@@ -43,3 +43,4 @@ export { TikTokPuzzle } from './TikTokPuzzle';
 export { VideoTimecodePuzzle } from './VideoTimecodePuzzle';
 export { ActionPuzzle } from './ActionPuzzle';
 export { ScheduleSabotagePuzzle } from './ScheduleSabotagePuzzle';
+export { InfluencerNetworkPuzzle } from './InfluencerNetworkPuzzle';

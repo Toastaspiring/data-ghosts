@@ -205,6 +205,12 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
           posts: data.posts ?? [],
           targetEngagementDrop: data.targetEngagementDrop ?? data.target_engagement_drop ?? 60,
         }
+      : componentName === 'InfluencerNetworkPuzzle'
+      ? {
+          targetIsolation: data.targetIsolation ?? 50,
+          maxMoves: data.maxMoves ?? 6,
+          timeLimit: data.timeLimit ?? 300,
+        }
       : {};
 
   const puzzleProps: any = {

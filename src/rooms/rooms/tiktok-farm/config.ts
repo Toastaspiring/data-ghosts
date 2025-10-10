@@ -622,30 +622,26 @@ export const tiktokFarmConfig: RoomConfig = {
       isUnlocked: true,
       isSolved: false,
       puzzle: {
-        id: 'metrics-sabotage',
+        id: 'network-sabotage',
         type: 'logic',
-        difficulty: 2,
-        timeLimit: 180,
-        component: 'MetricsPuzzle',
+        difficulty: 5,
+        timeLimit: 300,
+        component: 'InfluencerNetworkPuzzle',
         data: {
-          metrics: [
-            { name: 'likes', current: 500000, target: 50000 },
-            { name: 'shares', current: 100000, target: 5000 },
-            { name: 'saves', current: 80000, target: 8000 },
-            { name: 'follows', current: 250000, target: 25000 }
-          ],
-          reduction_factor: 10
+          targetIsolation: 50,
+          maxMoves: 6,
+          timeLimit: 300
         },
         validation: {
           type: 'custom',
-          validator: (metrics: any[]) => {
-            return metrics.every(m => m.value <= m.current / 10);
+          validator: (result: any) => {
+            return result.isolationScore >= 50 || result.fragmentationScore >= 75;
           }
         },
         hints: [
-          'Réduisez chaque métrique d\'au moins 90%.',
-          'Les likes et follows sont les plus importants.',
-          'Divisez toutes les valeurs par 10 minimum.'
+          'Ciblez les connexions fortes (>80) pour déclencher des cascades.',
+          'Les influenceurs avec multiplicateur élevé amplifient les dégâts.',
+          'Isoler 3 influenceurs OU fragmenter 75% du réseau pour gagner.'
         ],
         rewards: []
       }
