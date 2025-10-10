@@ -39,9 +39,17 @@ export const ScheduleSabotagePuzzle = ({
   ];
 
   const reschedulePost = (postId: number, newTime: string) => {
+    // Check if time slot is already taken by another post
+    const isTimeTaken = posts.some(post => post.id !== postId && post.currentTime === newTime);
+    if (isTimeTaken) return; // Don't allow scheduling at same time
+    
     setPosts(posts.map(post => 
       post.id === postId ? { ...post, currentTime: newTime } : post
     ));
+  };
+  
+  const isTimeSlotTaken = (time: string, currentPostId: number) => {
+    return posts.some(post => post.id !== currentPostId && post.currentTime === time);
   };
 
   const calculateEngagementDrop = () => {
@@ -78,6 +86,9 @@ export const ScheduleSabotagePuzzle = ({
         </h2>
         <p className="text-muted-foreground">
           Reprogrammez les posts aux pires horaires pour tuer leur engagement
+        </p>
+        <p className="text-xs text-destructive">
+          ⚠️ Chaque créneau horaire ne peut accueillir qu'un seul post
         </p>
         <Badge variant={avgDrop >= targetEngagementDrop ? "default" : "destructive"}>
           Baisse: {avgDrop}% / {targetEngagementDrop}%
@@ -132,19 +143,25 @@ export const ScheduleSabotagePuzzle = ({
 
                 {isSelected && (
                   <div className="grid grid-cols-4 gap-2 animate-fade-in">
-                    {timeSlots.map((slot) => (
-                      <Button
-                        key={slot.time}
-                        size="sm"
-                        variant={post.currentTime === slot.time ? "default" : "outline"}
-                        onClick={() => reschedulePost(post.id, slot.time)}
-                        className="h-auto py-2 flex flex-col"
-                        disabled={submitted}
-                      >
-                        <span className="text-xs">{slot.label}</span>
-                        <span className="text-[10px] text-muted-foreground">{slot.activity}%</span>
-                      </Button>
-                    ))}
+                    {timeSlots.map((slot) => {
+                      const isTaken = isTimeSlotTaken(slot.time, post.id);
+                      const isCurrent = post.currentTime === slot.time;
+                      
+                      return (
+                        <Button
+                          key={slot.time}
+                          size="sm"
+                          variant={isCurrent ? "default" : isTaken ? "destructive" : "outline"}
+                          onClick={() => reschedulePost(post.id, slot.time)}
+                          className="h-auto py-2 flex flex-col relative"
+                          disabled={submitted || isTaken}
+                        >
+                          <span className="text-xs">{slot.label}</span>
+                          <span className="text-[10px] opacity-70">{slot.activity}%</span>
+                          {isTaken && <span className="text-[10px] absolute top-0.5 right-0.5">🔒</span>}
+                        </Button>
+                      );
+                    })}
                   </div>
                 )}
 
