@@ -11,6 +11,7 @@ import { Clock, Target, Trophy, AlertCircle, ArrowLeft, Lightbulb, Lock, Play, C
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { WaitingModal } from '@/components/rooms/WaitingModal';
+import { PuzzleModal } from '../puzzles/PuzzleModal';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RoomLayoutProps {
@@ -551,57 +552,20 @@ export const RoomLayout: React.FC<RoomLayoutProps> = ({
           </div>
         </div>
 
-        {/* Enhanced Puzzle Modal */}
-        {activePuzzle && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <Card className="max-w-4xl w-full max-h-[90vh] overflow-auto border-primary cartoon-shadow animate-fade-in-up">
-              <CardHeader className="hero-gradient">
-                <CardTitle className="flex items-center justify-between neon-cyan font-mono text-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <Play className="w-4 h-4 text-background" />
-                    </div>
-                    Mission Active
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handlePuzzleComplete(activePuzzle, null)}
-                    className="border-primary/50 hover:border-primary"
-                  >
-                    Fermer
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <div className="text-8xl mb-6 animate-float">🧩</div>
-                  <h3 className="text-3xl font-semibold mb-4 neon-cyan font-mono">Interface de Puzzle</h3>
-                  <p className="text-muted-foreground mb-6 text-lg">
-                    Cette interface sera remplacée par les composants de puzzle spécifiques.
-                    Pour l'instant, vous pouvez simuler la résolution du puzzle.
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <Button 
-                      onClick={() => handlePuzzleComplete(activePuzzle, { solved: true })}
-                      className="bg-primary hover:bg-primary/90 text-lg px-8 py-3 animate-pulse-glow"
-                    >
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                      Simuler Résolution
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => handlePuzzleComplete(activePuzzle, null)}
-                      className="text-lg px-8 py-3"
-                    >
-                      Abandonner
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Puzzle Modal */}
+        {activePuzzle && (() => {
+          const element = config?.elements.find(el => el.puzzle?.id === activePuzzle);
+          if (!element?.puzzle) return null;
+          
+          return (
+            <PuzzleModal
+              puzzle={element.puzzle}
+              isOpen={true}
+              onClose={() => handlePuzzleComplete(activePuzzle, null)}
+              onComplete={handlePuzzleComplete}
+            />
+          );
+        })()}
 
         {/* Waiting Modal */}
         <WaitingModal 
