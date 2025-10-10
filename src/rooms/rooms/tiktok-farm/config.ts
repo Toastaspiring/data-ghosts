@@ -289,10 +289,10 @@ export const tiktokFarmConfig: RoomConfig = {
     },
 
     {
-      id: 'seven-differences',
+      id: 'fake-engagement-detection',
       type: 'device',
-      name: 'Jeu des 7 Différences',
-      description: 'Trouvez les 7 différences entre la vraie salle et la version fake filmée.',
+      name: 'Détection d\'Engagement Gonflé',
+      description: 'Analysez les métriques des comptes pour identifier ceux qui achètent des vues et des likes.',
       position: { x: 180, y: 280 },
       size: { width: 90, height: 70 },
       dependencies: [], // All puzzles unlocked from start
@@ -302,39 +302,81 @@ export const tiktokFarmConfig: RoomConfig = {
           data: {
             id: 'fake-detection',
             title: 'Détection de Fake',
-            description: 'Vous savez maintenant distinguer le vrai du faux - leur supercherie est exposée !'
+            description: 'Vous avez exposé leurs métriques gonflées - leur crédibilité est ruinée !'
           }
         }
       ],
       isUnlocked: true,
       isSolved: false,
       puzzle: {
-        id: 'seven-differences-game',
-        type: 'spatial',
+        id: 'engagement-pattern-detection',
+        type: 'logic',
         difficulty: 3,
-        timeLimit: 420,
-        component: 'SevenDifferencesPuzzle',
+        timeLimit: 300,
+        component: 'EngagementPatternPuzzle',
         data: {
-          image1: '/images/rooms/real-room.jpg',
-          image2: '/images/rooms/fake-room.jpg',
-          differences: [
-            { x: 150, y: 200, radius: 30 },
-            { x: 300, y: 150, radius: 25 },
-            { x: 450, y: 300, radius: 35 },
-            { x: 600, y: 180, radius: 28 },
-            { x: 750, y: 250, radius: 32 },
-            { x: 500, y: 400, radius: 30 },
-            { x: 200, y: 350, radius: 26 }
+          accounts: [
+            {
+              account: '@fashionista_paris',
+              followers: 250000,
+              avgViews: 50000,
+              avgLikes: 35000,
+              avgComments: 200,
+              isFake: true,
+              reason: 'Ratio likes/vues = 70% (suspect > 50%). Très peu de commentaires par rapport aux likes.'
+            },
+            {
+              account: '@tech_reviewer_pro',
+              followers: 180000,
+              avgViews: 120000,
+              avgLikes: 8000,
+              avgComments: 450,
+              isFake: false
+            },
+            {
+              account: '@travel_explorer',
+              followers: 500000,
+              avgViews: 25000,
+              avgLikes: 22000,
+              avgComments: 50,
+              isFake: true,
+              reason: 'Beaucoup d\'abonnés mais peu de vues. Ratio likes/vues = 88% (très suspect). Commentaires quasi inexistants.'
+            },
+            {
+              account: '@cooking_mama',
+              followers: 95000,
+              avgViews: 45000,
+              avgLikes: 5500,
+              avgComments: 380,
+              isFake: false
+            },
+            {
+              account: '@fitness_beast',
+              followers: 420000,
+              avgViews: 350000,
+              avgLikes: 280000,
+              avgComments: 120,
+              isFake: true,
+              reason: 'Ratio likes/vues = 80% (énorme red flag). Engagement massif mais commentaires ridicules = bots.'
+            },
+            {
+              account: '@art_gallery_daily',
+              followers: 65000,
+              avgViews: 32000,
+              avgLikes: 4200,
+              avgComments: 290,
+              isFake: false
+            }
           ]
         },
         validation: {
           type: 'exact',
-          correctAnswer: 7 // All differences found
+          correctAnswer: [0, 2, 4] // Indices des comptes fake
         },
         hints: [
-          'Regardez attentivement les objets et leur position.',
-          'Certaines différences sont subtiles (couleurs, tailles).',
-          'Les éclairages peuvent être différents entre les deux images.'
+          'Un ratio likes/vues supérieur à 50% est suspect.',
+          'Beaucoup de likes mais très peu de commentaires = bots.',
+          'Comparez le nombre de followers avec les vues réelles.'
         ],
         rewards: [
           {

@@ -13,6 +13,7 @@ export { AlarmActivationPuzzle } from './AlarmActivationPuzzle';
 export { HashtagPuzzle } from './HashtagPuzzle';
 export { ViralVideoPuzzle } from './ViralVideoPuzzle';
 export { FactCheckPuzzle } from './FactCheckPuzzle';
+export { EngagementPatternPuzzle } from './EngagementPatternPuzzle';
 export { CommentPuzzle } from './CommentPuzzle';
 export { ViewAnalysisPuzzle } from './ViewAnalysisPuzzle';
 export { MetricsPuzzle } from './MetricsPuzzle';
