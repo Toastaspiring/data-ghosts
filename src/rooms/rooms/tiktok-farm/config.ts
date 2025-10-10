@@ -457,7 +457,7 @@ export const tiktokFarmConfig: RoomConfig = {
         id: 'algorithm-hack',
         type: 'code',
         difficulty: 3,
-        timeLimit: 200,
+        timeLimit: 600,
         component: 'AlgorithmPuzzle',
         data: {
           parameters: [
@@ -471,7 +471,7 @@ export const tiktokFarmConfig: RoomConfig = {
             { name: 'interaction_score', current: 78, min: 0, max: 100, target: 20, weight: 0.9, linkedTo: ['comment_density', 'share_velocity'] }
           ],
           threshold: 25,
-          maxTotalScore: 180,
+          maxTotalScore: 185,
           constraints: [
             { params: ['engagement_rate', 'watch_time'], rule: 'Baisser engagement_rate augmente watch_time de 30%' },
             { params: ['share_velocity', 'viral_coefficient'], rule: 'Si share_velocity < 30, viral_coefficient -20' },
@@ -483,13 +483,13 @@ export const tiktokFarmConfig: RoomConfig = {
           validator: (params: any[]) => {
             const allUnderThreshold = params.every(p => p.value <= 25);
             const totalScore = params.reduce((sum, p) => sum + (p.value * (p.weight || 1)), 0);
-            return allUnderThreshold && totalScore <= 180;
+            return allUnderThreshold && totalScore <= 185;
           }
         },
         hints: [
           'Chaque paramètre doit être ≤ 25, mais attention aux dépendances !',
           'Baisser un paramètre peut en augmenter d\'autres - trouvez l\'équilibre.',
-          'Le score total pondéré doit rester sous 180 points.'
+          'Le score total pondéré doit rester sous 185 points.'
         ],
         rewards: []
       }
