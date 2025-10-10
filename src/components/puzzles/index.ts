@@ -1,0 +1,43 @@
+// Export all puzzle components
+export { CaptchaPuzzle } from './CaptchaPuzzle';
+export { MemePuzzle } from './MemePuzzle';
+export { SceneAnalysisPuzzle } from './SceneAnalysisPuzzle';
+export { PropsPuzzle } from './PropsPuzzle';
+export { CameraAnglePuzzle } from './CameraAnglePuzzle';
+export { AudioSyncPuzzle } from './AudioSyncPuzzle';
+export { AnachronismPuzzle } from './AnachronismPuzzle';
+export { VFXPuzzle } from './VFXPuzzle';
+export { BTSPuzzle } from './BTSPuzzle';
+export { SabotageChoicePuzzle } from './SabotageChoicePuzzle';
+export { AlarmActivationPuzzle } from './AlarmActivationPuzzle';
+export { HashtagPuzzle } from './HashtagPuzzle';
+export { ViralVideoPuzzle } from './ViralVideoPuzzle';
+export { FactCheckPuzzle } from './FactCheckPuzzle';
+export { CommentPuzzle } from './CommentPuzzle';
+export { ViewAnalysisPuzzle } from './ViewAnalysisPuzzle';
+export { MetricsPuzzle } from './MetricsPuzzle';
+export { ContractPuzzle } from './ContractPuzzle';
+export { PasswordDiscoveryPuzzle } from './PasswordDiscoveryPuzzle';
+export { SabotagePuzzle } from './SabotagePuzzle';
+export { HashtagAnalysisPuzzle } from './HashtagAnalysisPuzzle';
+export { ColorGradingPuzzle } from './ColorGradingPuzzle';
+export { AudioMixPuzzle } from './AudioMixPuzzle';
+export { TransitionPuzzle } from './TransitionPuzzle';
+export { ExportPuzzle } from './ExportPuzzle';
+export { PatternAnalysisPuzzle } from './PatternAnalysisPuzzle';
+export { DecryptionPuzzle } from './DecryptionPuzzle';
+export { ContainmentSequencePuzzle } from './ContainmentSequencePuzzle';
+export { PressurePuzzle } from './PressurePuzzle';
+export { SpeciesPuzzle } from './SpeciesPuzzle';
+export { CorruptionChoicePuzzle } from './CorruptionChoicePuzzle';
+
+// Re-export existing puzzles
+export { AlgorithmPuzzle } from './AlgorithmPuzzle';
+export { BiodiversityQuizPuzzle } from './BiodiversityQuizPuzzle';
+export { ColorGamePuzzle } from './ColorGamePuzzle';
+export { CorruptPuzzle } from './CorruptPuzzle';
+export { FinalButtonPuzzle } from './FinalButtonPuzzle';
+export { SevenDifferencesPuzzle } from './SevenDifferencesPuzzle';
+export { TikTokPuzzle } from './TikTokPuzzle';
+export { VideoTimecodePuzzle } from './VideoTimecodePuzzle';
+export { ActionPuzzle } from './ActionPuzzle';
