@@ -190,6 +190,11 @@ export const PuzzleModal: React.FC<PuzzleModalProps> = ({
           falseStatements: data.falseStatements ?? data.false_statements ?? [],
           correctFacts: data.correctFacts ?? data.correct_facts ?? [],
         }
+      : componentName === 'CommentPuzzle'
+      ? {
+          templates: data.templates ?? data.negative_templates ?? [],
+          targetCount: data.targetCount ?? data.target_count ?? 50,
+        }
       : {};
 
   const puzzleProps: any = {
