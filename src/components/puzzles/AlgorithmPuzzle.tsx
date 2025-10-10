@@ -157,7 +157,7 @@ export const AlgorithmPuzzle = ({
           <div className="space-y-1">
             <div className="text-sm text-muted-foreground">Score Total Pondéré</div>
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${scoreValid ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-2xl font-bold ${scoreValid ? 'text-primary' : 'text-destructive'}`}>
                 {Math.round(totalScore)}
               </span>
               <span className="text-muted-foreground">/ {maxTotalScore}</span>
@@ -168,7 +168,7 @@ export const AlgorithmPuzzle = ({
           <div className="space-y-1">
             <div className="text-sm text-muted-foreground">Paramètres Valides</div>
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${allUnderThreshold ? 'text-green-600' : 'text-orange-600'}`}>
+              <span className={`text-2xl font-bold ${allUnderThreshold ? 'text-primary' : 'text-accent'}`}>
                 {parameters.filter(p => paramValues[p.name] <= threshold).length}
               </span>
               <span className="text-muted-foreground">/ {parameters.length}</span>
@@ -180,15 +180,15 @@ export const AlgorithmPuzzle = ({
       <CardContent className="space-y-6">
         {/* Constraints Display */}
         {constraints.length > 0 && (
-          <div className="p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
+          <div className="p-4 bg-accent/10 rounded-lg border border-accent/30">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-5 h-5 text-orange-600" />
-              <span className="font-semibold text-sm">Contraintes Système</span>
+              <AlertTriangle className="w-5 h-5 text-accent" />
+              <span className="font-semibold text-sm text-accent">Contraintes Système</span>
             </div>
             <ul className="space-y-1 text-xs text-muted-foreground">
               {constraints.map((constraint, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <TrendingDown className="w-3 h-3 mt-0.5 shrink-0" />
+                  <TrendingDown className="w-3 h-3 mt-0.5 shrink-0 text-accent" />
                   <span>{constraint.rule}</span>
                 </li>
               ))}
@@ -208,10 +208,10 @@ export const AlgorithmPuzzle = ({
                 key={param.name} 
                 className={`p-4 rounded-lg border-2 transition-all ${
                   status === 'success' 
-                    ? 'border-green-500 bg-green-50 dark:bg-green-950/20' 
+                    ? 'border-primary bg-primary/10' 
                     : status === 'warning'
-                    ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20'
-                    : 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                    ? 'border-secondary bg-secondary/10'
+                    : 'border-destructive bg-destructive/10'
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
@@ -267,14 +267,14 @@ export const AlgorithmPuzzle = ({
 
         {/* Status Messages */}
         {showHint && attempts > 0 && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/30">
             <div className="text-sm space-y-2">
-              <p className="font-semibold">💡 Indices après {attempts} tentative(s):</p>
+              <p className="font-semibold text-secondary">💡 Indices après {attempts} tentative(s):</p>
               {!allUnderThreshold && (
-                <p>• Certains paramètres sont encore au-dessus de {threshold}</p>
+                <p className="text-foreground">• Certains paramètres sont encore au-dessus de {threshold}</p>
               )}
               {!scoreValid && (
-                <p>• Votre score total ({Math.round(totalScore)}) dépasse {maxTotalScore}</p>
+                <p className="text-foreground">• Votre score total ({Math.round(totalScore)}) dépasse {maxTotalScore}</p>
               )}
               <p className="text-xs text-muted-foreground mt-2">
                 Astuce: Les paramètres liés s'influencent mutuellement. Ajustez-les dans le bon ordre !
@@ -284,8 +284,8 @@ export const AlgorithmPuzzle = ({
         )}
 
         {canSolve && (
-          <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-            <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+          <div className="p-4 bg-primary/10 rounded-lg border border-primary/30">
+            <div className="flex items-center gap-2 text-primary">
               <CheckCircle2 className="w-5 h-5" />
               <span className="font-semibold">Configuration valide ! Validez pour saboter l'algorithme.</span>
             </div>
