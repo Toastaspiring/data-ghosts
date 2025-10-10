@@ -121,7 +121,7 @@ export const EngagementPatternPuzzle = ({ accounts = [], onSolve }: EngagementPa
                       Suspect
                     </Badge>
                   )}
-                  {submitted && account.isFake && (
+                  {isSuccess && account.isFake && (
                     <Badge variant="destructive">
                       FAKE
                     </Badge>
@@ -150,7 +150,7 @@ export const EngagementPatternPuzzle = ({ accounts = [], onSolve }: EngagementPa
                   </div>
                 </div>
 
-                {submitted && account.isFake && account.reason && (
+                {isSuccess && account.isFake && account.reason && (
                   <div className="pt-3 border-t border-border text-xs text-red-400">
                     🔍 {account.reason}
                   </div>
