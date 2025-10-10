@@ -15,6 +15,16 @@ export const PasswordDiscoveryPuzzle = ({ correctPassword, hints, onSolve }: Pas
   const [password, setPassword] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [showPostIt, setShowPostIt] = useState(false);
+  const [discoveredClues, setDiscoveredClues] = useState<string[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const maxAttempts = 3;
+  
+  const deskItems = [
+    { id: "calendar", name: "Calendrier", clue: "Date importante: 1987" },
+    { id: "photo", name: "Photo de famille", clue: "Nom du chien: Rex" },
+    { id: "postit", name: "Post-it", clue: "Mot de passe brouillé: xR71e89" },
+    { id: "notebook", name: "Carnet", clue: "Format: [Animal][Année]" },
+  ];
 
   const handleSubmit = () => {
     setAttempts(attempts + 1);

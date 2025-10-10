@@ -26,6 +26,7 @@ export const HashtagAnalysisPuzzle = ({
       setSelectedHashtags(selectedHashtags.filter(h => h !== hashtag));
     } else if (selectedHashtags.length < 4) {
       setSelectedHashtags([...selectedHashtags, hashtag]);
+      setRevealedTypes(new Set([...revealedTypes, hashtag]));
     }
   };
 
@@ -33,6 +34,19 @@ export const HashtagAnalysisPuzzle = ({
     if (trendingHashtags.includes(hashtag)) return "trending";
     if (avoidHashtags.includes(hashtag)) return "avoid";
     return "neutral";
+  };
+  
+  const getHashtagMetrics = (hashtag: string) => {
+    const type = getHashtagType(hashtag);
+    const baseViews = type === "trending" ? 8 : type === "avoid" ? 9 : 4;
+    const baseLikes = type === "trending" ? 500 : type === "avoid" ? 600 : 300;
+    const baseShares = type === "trending" ? 200 : type === "avoid" ? 250 : 100;
+    
+    return {
+      views: `${baseViews + Math.floor(Math.random() * 3)}M`,
+      likes: `${baseLikes + Math.floor(Math.random() * 200)}K`,
+      shares: `${baseShares + Math.floor(Math.random() * 100)}K`
+    };
   };
 
   const handleSubmit = () => {

@@ -8,6 +8,7 @@ interface SevenDifferencesPuzzleProps {
 
 export const SevenDifferencesPuzzle = ({ onSolve }: SevenDifferencesPuzzleProps) => {
   const [foundDifferences, setFoundDifferences] = useState<number[]>([]);
+  const [penalties, setPenalties] = useState(0);
   
   const differences = [
     { id: 1, x: 20, y: 30, label: "Cadre photo" },
@@ -19,7 +20,12 @@ export const SevenDifferencesPuzzle = ({ onSolve }: SevenDifferencesPuzzleProps)
     { id: 7, x: 40, y: 80, label: "Vase" },
   ];
 
-  const handleClick = (diffId: number) => {
+  const handleClick = (diffId: number, isFake: boolean = false) => {
+    if (isFake) {
+      setPenalties(penalties + 1);
+      return;
+    }
+    
     if (!foundDifferences.includes(diffId)) {
       const newFound = [...foundDifferences, diffId];
       setFoundDifferences(newFound);
@@ -29,6 +35,12 @@ export const SevenDifferencesPuzzle = ({ onSolve }: SevenDifferencesPuzzleProps)
       }
     }
   };
+  
+  const fakeDifferences = [
+    { id: 101, x: 15, y: 45, label: "Fausse différence A" },
+    { id: 102, x: 75, y: 25, label: "Fausse différence B" },
+    { id: 103, x: 45, y: 75, label: "Fausse différence C" },
+  ];
 
   return (
     <div className="bg-card rounded-3xl p-8 cartoon-shadow">

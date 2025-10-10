@@ -13,6 +13,9 @@ interface CommentPuzzleProps {
 export const CommentPuzzle = ({ templates, targetCount, onSolve }: CommentPuzzleProps) => {
   const [comments, setComments] = useState<string[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState(0);
+  const [templateCounts, setTemplateCounts] = useState<Record<number, number>>({});
+  const [credibilityScore, setCredibilityScore] = useState(100);
+  const [showWarning, setShowWarning] = useState(false);
 
   const variations = [
     "", "!!!", "???", " 😂", " 🤡", " smh", " fr fr", " no cap"
@@ -36,7 +39,7 @@ export const CommentPuzzle = ({ templates, targetCount, onSolve }: CommentPuzzle
   };
 
   const handleSubmit = () => {
-    if (comments.length >= targetCount) {
+    if (comments.length >= targetCount && credibilityScore >= 60) {
       onSolve();
     }
   };
