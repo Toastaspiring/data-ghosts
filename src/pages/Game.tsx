@@ -93,11 +93,15 @@ const Game = () => {
     };
   }, [lobbyId, playerId, navigate, toast]);
 
-  const handleElementInteract = (elementId: string, interactionType: InteractionType) => {
-    console.log("Element interaction:", elementId, interactionType);
-    setActiveElement(elementId);
-    setActivePuzzle(elementId);
-  };
+const handleElementInteract = (elementId: string, interactionType: InteractionType) => {
+  console.log("Element interaction:", elementId, interactionType);
+  setActiveElement(elementId);
+  const puzzleId = roomConfig?.elements.find(el => el.id === elementId)?.puzzle?.id || null;
+  setActivePuzzle(puzzleId);
+  if (!puzzleId) {
+    console.warn(`No puzzle linked to element ${elementId}`);
+  }
+};
 
   const handlePuzzleComplete = (puzzleId: string, solution: any) => {
     console.log("Puzzle completed:", puzzleId, solution);
